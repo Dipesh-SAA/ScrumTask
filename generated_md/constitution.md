@@ -1,232 +1,311 @@
-# **Scrum Interface & Jira Integration – Constitution File**
-**Version:** 1.0
-**Prepared For:** Scrum Interface Development Team
-**Purpose:** Define the governance framework for building a **Scrum Interface** that integrates with **Jira**, **GitHub**, and **artifact management**, ensuring structured task tracking, user story management, and testing documentation.
+# Scrum Interface Platform – Constitution File
 
----
+# Project Objective
+This constitution defines the governing framework for a Scrum Interface Platform that integrates with Jira, GitHub, and MongoDB to manage user stories, tasks, artifacts, bugs, and testing documentation. The platform will enable seamless Agile workflow management with AI-driven time prediction and artifact organization.
 
-## **1. PURPOSE OF THIS CONSTITUTION**
-This constitution establishes the **rules, structure, and execution principles** for:
-- Designing a **MongoDB schema** for the Scrum Interface.
-- Building **RESTful APIs** to interact with Jira, GitHub, and internal artifact storage.
-- Managing **user stories, tasks, bugs, artifacts, and test documentation**.
-- Ensuring **scalable, maintainable, and enterprise-grade** integration.
+# Project Scope
+The Scrum Interface Platform will:
+- Ingest tasks and user stories from Jira
+- Create structured artifact repositories (code snippets, design documents)
+- Link GitHub repositories to user stories
+- Track issue/bug logs per user story
+- Assign user stories to team members
+- Retrieve Epic and project metadata from Jira
+- Store and organize test screenshots with descriptions
+- Predict task completion times using historical data
+- Support enterprise-grade Agile workflows
 
-The AI agent must generate:
-✅ **MongoDB collection schemas** (optimized for Scrum workflows).
-✅ **API specifications** (Jira ↔ Scrum Interface ↔ GitHub).
-✅ **Task & artifact structures** (code snippets, design docs, screenshots).
-✅ **Sprint-ready execution plans** (aligned with Agile principles).
+# Core Functional Expectations
+1. **Jira Integration**
+   - Bi-directional sync of tasks, user stories, and Epics
+   - Real-time status updates
+   - Metadata preservation (labels, priorities, sprints)
 
----
+2. **Artifact Management**
+   - Structured storage for code snippets, design documents
+   - Versioning support
+   - Searchable metadata
 
-## **2. PROJECT DOMAIN**
-The **Scrum Interface** is a **centralized system** for:
-- **Jira Integration** (Epic, User Story, Task, Bug ingestion).
-- **Artifact Management** (Code snippets, design docs, test screenshots).
-- **GitHub Linking** (Associating code with user stories).
-- **User Assignment & Time Tracking** (Predicted vs. actual effort).
-- **Test Documentation** (Screenshots, descriptions, test case linking).
+3. **GitHub Integration**
+   - Link commits/PRs to user stories
+   - Branch association tracking
+   - Code review status sync
 
-**Key Integrations:**
-| System | Purpose |
-|--------|---------|
-| **Jira** | Fetch Epics, User Stories, Tasks, Bugs |
-| **GitHub** | Link code repositories to user stories |
-| **MongoDB** | Store artifacts, test docs, and Scrum data |
-| **API Layer** | RESTful endpoints for CRUD operations |
+4. **Bug/Issue Tracking**
+   - Log creation per user story
+   - Severity/priority classification
+   - Resolution workflow
 
----
+5. **Testing Documentation**
+   - Screenshot storage with descriptions
+   - Test case association
+   - Pass/fail status tracking
 
-## **3. CORE MODULES & FUNCTIONALITY**
-### **3.1 Jira Integration Module**
-**Capabilities:**
-- Fetch **Epics, User Stories, Tasks, Bugs** from Jira.
-- Sync **status updates** (In Progress, Done, Blocked).
-- Retrieve **project metadata** (sprints, assignees, priorities).
-- **Webhook support** for real-time updates.
+6. **AI-Powered Features**
+   - Task time prediction
+   - Workload balancing suggestions
+   - Risk assessment
 
-**Primary Technologies:**
-- **Jira REST API**
-- **Webhooks**
-- **OAuth 2.0** (for secure authentication)
+# Architecture Principles
+- **API-First Design**: All functionality exposed via RESTful APIs
+- **Modular Components**: Separate services for Jira, GitHub, and artifact management
+- **Event-Driven**: Webhooks for real-time updates
+- **Scalable Storage**: MongoDB for flexible document schemas
+- **Security-First**: Role-based access control for all operations
 
----
+# MongoDB Collection Governance
+## Collection Structure
+1. **UserStories**
+   ```json
+   {
+     "_id": ObjectId,
+     "jiraId": String,
+     "title": String,
+     "description": String,
+     "status": String,
+     "assignee": ObjectId,
+     "epicId": String,
+     "projectId": String,
+     "sprintId": String,
+     "priority": String,
+     "createdAt": Date,
+     "updatedAt": Date,
+     "predictedTime": Number,
+     "actualTime": Number
+   }
+   ```
 
-### **3.2 Artifact Management Module**
-**Capabilities:**
-- Store **code snippets, design documents, test screenshots**.
-- **Versioning** for artifacts (e.g., `v1.0`, `v2.0`).
-- **Tagging & categorization** (e.g., `frontend`, `backend`, `testing`).
-- **Search & filtering** (by user story, sprint, or assignee).
+2. **Artifacts**
+   ```json
+   {
+     "_id": ObjectId,
+     "userStoryId": ObjectId,
+     "type": String, // "code_snippet"|"design_doc"|"test_screenshot"
+     "name": String,
+     "description": String,
+     "storagePath": String,
+     "version": String,
+     "createdBy": ObjectId,
+     "createdAt": Date
+   }
+   ```
 
-**Primary Technologies:**
-- **MongoDB GridFS** (for large file storage)
-- **File metadata indexing** (for fast retrieval)
+3. **BugsIssues**
+   ```json
+   {
+     "_id": ObjectId,
+     "userStoryId": ObjectId,
+     "title": String,
+     "description": String,
+     "severity": String,
+     "status": String,
+     "reportedBy": ObjectId,
+     "assignedTo": ObjectId,
+     "createdAt": Date,
+     "resolvedAt": Date
+   }
+   ```
 
----
+4. **Tests**
+   ```json
+   {
+     "_id": ObjectId,
+     "userStoryId": ObjectId,
+     "testCaseId": String,
+     "screenshots": [{
+       "path": String,
+       "description": String,
+       "status": String // "pass"|"fail"|"pending"
+     }],
+     "status": String,
+     "executedBy": ObjectId,
+     "executedAt": Date
+   }
+   ```
 
-### **3.3 GitHub Integration Module**
-**Capabilities:**
-- Link **GitHub commits, PRs, branches** to user stories.
-- **Automated status updates** (e.g., "Code merged → User Story Done").
-- **Branch naming conventions** (e.g., `feature/US-123-add-login`).
+5. **GitHubLinks**
+   ```json
+   {
+     "_id": ObjectId,
+     "userStoryId": ObjectId,
+     "repo": String,
+     "branch": String,
+     "commitHash": String,
+     "prNumber": Number,
+     "type": String // "commit"|"pr"|"issue"
+   }
+   ```
 
-**Primary Technologies:**
-- **GitHub API**
-- **Webhooks** (for commit/PR events)
+## Indexing Requirements
+- Compound index on `userStoryId` + `type` for artifacts
+- Text index on `title` and `description` for search
+- TTL index on temporary test data (if applicable)
 
----
+# API Governance
+## Core API Principles
+- RESTful endpoints with JSON payloads
+- Versioned routes (`/api/v1/...`)
+- Standard HTTP status codes
+- Rate limiting (1000 requests/minute per API key)
+- Request/response logging
 
-### **3.4 Test Documentation Module**
-**Capabilities:**
-- Store **test screenshots** with descriptions.
-- Link screenshots to **test cases & user stories**.
-- **Versioning** for test artifacts.
-- **Searchable test logs** (by bug ID, user story, or sprint).
+## Required Endpoints
+1. **Jira Integration**
+   - `POST /api/v1/jira/sync` - Trigger full sync
+   - `GET /api/v1/jira/stories` - List user stories
+   - `GET /api/v1/jira/epics` - List epics
 
-**Primary Technologies:**
-- **MongoDB (BSON storage for metadata)**
-- **Image compression** (for efficient storage)
+2. **User Story Management**
+   - `POST /api/v1/stories` - Create story
+   - `GET /api/v1/stories/{id}` - Get story details
+   - `PUT /api/v1/stories/{id}/assign` - Assign user
 
----
+3. **Artifact Management**
+   - `POST /api/v1/artifacts` - Upload artifact
+   - `GET /api/v1/artifacts/{id}` - Download artifact
+   - `GET /api/v1/stories/{id}/artifacts` - List artifacts
 
-### **3.5 User & Time Tracking Module**
-**Capabilities:**
-- Assign **user stories to team members**.
-- Track **predicted vs. actual time** for tasks.
-- **Sprint-wise effort reporting**.
-- **Dependency mapping** (blocked tasks, prerequisites).
+4. **GitHub Integration**
+   - `POST /api/v1/github/link` - Link repository item
+   - `GET /api/v1/stories/{id}/github` - List linked items
 
-**Primary Technologies:**
-- **MongoDB (for user assignments & time logs)**
-- **Jira API (for syncing assignees)**
+5. **Testing**
+   - `POST /api/v1/tests/screenshots` - Upload screenshot
+   - `PUT /api/v1/tests/{id}/status` - Update test status
 
----
+6. **AI Features**
+   - `GET /api/v1/stories/{id}/prediction` - Get time prediction
 
-## **4. MONGODB SCHEMA DESIGN**
-### **4.1 Collections & Fields**
-| Collection | Key Fields | Description |
-|------------|------------|-------------|
-| **`user_stories`** | `_id`, `jiraId`, `title`, `description`, `status`, `assignee`, `sprint`, `epicId`, `predictedTime`, `actualTime`, `githubLinks`, `artifacts` | Stores Jira user stories with metadata. |
-| **`tasks`** | `_id`, `jiraId`, `title`, `userStoryId`, `status`, `assignee`, `predictedTime`, `actualTime`, `githubLinks` | Sub-tasks under user stories. |
-| **`bugs`** | `_id`, `jiraId`, `title`, `userStoryId`, `status`, `severity`, `assignee`, `screenshots` | Bugs linked to user stories. |
-| **`artifacts`** | `_id`, `userStoryId`, `type` (code/design/test), `fileUrl`, `version`, `createdAt`, `updatedAt` | Stores code snippets, design docs, etc. |
-| **`test_screenshots`** | `_id`, `userStoryId`, `bugId`, `description`, `imageUrl`, `testCaseId`, `createdAt` | Screenshots for testing. |
-| **`epics`** | `_id`, `jiraId`, `title`, `description`, `projectId`, `status` | High-level project epics. |
-| **`projects`** | `_id`, `jiraId`, `name`, `description`, `sprints` | Project metadata. |
+# Authentication & Authorization Rules
+- **JWT-based authentication** with 1-hour token expiration
+- **API Key authentication** for service-to-service communication
+- **Role-Based Access Control (RBAC)** with:
+  - `admin`: Full access
+  - `developer`: Read/write to assigned stories
+  - `tester`: Read/write to tests
+  - `viewer`: Read-only access
+- **OAuth 2.0** for Jira/GitHub integration
+- **Data isolation** by project/team
 
----
+# Integration Governance
+## Jira Integration
+- Webhook-based real-time updates
+- Daily full sync for data consistency
+- Field mapping configuration
+- Error handling with retry logic
 
-## **5. API DESIGN (RESTful Endpoints)**
-### **5.1 Jira Integration API**
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/jira/sync` | `POST` | Fetch latest Jira data (Epics, User Stories, Tasks, Bugs). |
-| `/api/jira/webhook` | `POST` | Receive real-time Jira updates via webhook. |
-| `/api/jira/user-stories` | `GET` | List all user stories (filter by sprint, assignee, status). |
-| `/api/jira/epics` | `GET` | Retrieve all epics for a project. |
+## GitHub Integration
+- OAuth-based authentication
+- Webhook registration for push/PR events
+- Commit message parsing for story references
+- Rate limit management
 
-### **5.2 Artifact Management API**
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/artifacts/upload` | `POST` | Upload a code snippet, design doc, or test screenshot. |
-| `/api/artifacts/{id}` | `GET` | Retrieve an artifact by ID. |
-| `/api/artifacts/user-story/{id}` | `GET` | List all artifacts for a user story. |
+# Artifact Governance
+- **Storage**: Cloud object storage (S3-compatible)
+- **Retention**: 30-day lifecycle for test screenshots
+- **Versioning**: Semantic versioning for design documents
+- **Access Control**: RBAC + story-level permissions
+- **Metadata**: Required fields for all artifacts
 
-### **5.3 GitHub Integration API**
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/github/link` | `POST` | Link a GitHub commit/PR to a user story. |
-| `/api/github/user-story/{id}` | `GET` | Get all GitHub links for a user story. |
+# Validation Rules
+1. **Data Validation**
+   - Required fields for all collections
+   - Field type validation
+   - Reference integrity checks
+   - Size limits (e.g., 10MB max for screenshots)
 
-### **5.4 Test Documentation API**
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/tests/upload-screenshot` | `POST` | Upload a test screenshot with description. |
-| `/api/tests/user-story/{id}` | `GET` | Get all test screenshots for a user story. |
+2. **Business Logic Validation**
+   - Status transitions (e.g., "In Progress" → "Done")
+   - Assignment rules (e.g., only one assignee per story)
+   - Time prediction bounds (e.g., 0.5-40 hours)
 
----
+3. **API Validation**
+   - Request payload validation
+   - Rate limit enforcement
+   - Idempotency for critical operations
 
-## **6. TASK GENERATION RULES**
-### **6.1 Required Fields for Each Task**
-| Field | Description |
-|-------|-------------|
-| **Epic** | High-level project goal (e.g., "Scrum Interface Integration"). |
-| **Feature** | Functional capability (e.g., "Jira User Story Sync"). |
-| **Task** | Implementation activity (e.g., "Design MongoDB schema for user stories"). |
-| **Subtasks** | Detailed steps (e.g., "Define `user_stories` collection fields"). |
-| **Assigned Role** | Developer, QA, DevOps, etc. |
-| **Priority** | High / Medium / Low |
-| **Sprint** | Sprint number (e.g., "Sprint 3"). |
-| **Dependency** | Prerequisite tasks (e.g., "Jira API authentication must be done first"). |
-| **Estimated Effort** | Story points or hours. |
-| **Status** | Planned / In Progress / Done. |
-| **Deliverable** | Expected output (e.g., "MongoDB schema + API endpoints"). |
+# Security Governance
+- **Data Encryption**: TLS 1.2+ for all communications
+- **Storage Encryption**: AES-256 for artifacts at rest
+- **Secret Management**: Environment variables for credentials
+- **Audit Logging**: All write operations logged
+- **Input Sanitization**: Protection against NoSQL injection
+- **CORS**: Restricted to approved domains
 
-### **6.2 Example Task Breakdown**
-**Epic:** Scrum Interface Integration
-**Feature:** Jira User Story Sync
-**Task:** Implement MongoDB schema for user stories
-**Subtasks:**
-1. Define `user_stories` collection fields.
-2. Set up indexes for fast querying.
-3. Write migration script for existing Jira data.
-4. Test schema with sample data.
-**Assigned Role:** Backend Developer
-**Priority:** High
-**Sprint:** 2
-**Dependency:** Jira API authentication
-**Estimated Effort:** 3 days
-**Status:** Planned
-**Deliverable:** MongoDB schema + sample data insertion script
+# Workflow Governance
+1. **User Story Lifecycle**
+   - Backlog → Ready → In Progress → Review → Done
+   - Mandatory artifacts before "Review" status
+   - Linked GitHub items before "Done"
 
----
+2. **Bug/Issue Workflow**
+   - New → Triaged → In Progress → Resolved → Verified
+   - Mandatory resolution notes
 
-## **7. EXECUTION PHILOSOPHY**
-### **7.1 Agile Principles**
-✅ **Incremental Development** – Build in small, testable chunks.
-✅ **Dependency-Aware Planning** – Avoid blocking tasks.
-✅ **Parallel Workstreams** – UI, API, and DB work can happen simultaneously.
-✅ **Continuous Testing** – Validate APIs, schema, and integrations early.
+3. **Test Workflow**
+   - Draft → In Progress → Passed/Failed
+   - Screenshot upload required for "Passed/Failed"
 
-### **7.2 Avoid**
-❌ **Generic tasks** (e.g., "Build Scrum Interface" → Too vague).
-❌ **Unrealistic timelines** (e.g., "Sync all Jira data in 1 day").
-❌ **Ambiguous ownership** (e.g., "Someone should do this").
-❌ **Undefined deliverables** (e.g., "Make it work" → Not measurable).
+# AI Agent Governance Rules
+- **Time Prediction Agent**:
+  - Uses historical data from similar tasks
+  - Considers assignee's past performance
+  - Updates predictions when new data is available
 
----
+- **Artifact Organization Agent**:
+  - Automatically tags artifacts by type
+  - Suggests missing artifact types
+  - Maintains version history
 
-## **8. TESTING REQUIREMENTS**
-| Test Type | Description |
-|-----------|-------------|
-| **API Testing** | Validate Jira ↔ Scrum Interface sync. |
-| **Schema Validation** | Ensure MongoDB collections store data correctly. |
-| **GitHub Linking** | Test commit/PR associations with user stories. |
-| **Artifact Upload** | Verify file storage (code snippets, screenshots). |
-| **Time Tracking** | Check predicted vs. actual effort logging. |
+- **Workflow Compliance Agent**:
+  - Validates status transitions
+  - Checks for required artifacts
+  - Flags missing GitHub links
 
----
+# Non Functional Requirements
+- **Performance**: <500ms response time for 95% of API calls
+- **Scalability**: Support 10,000+ concurrent users
+- **Availability**: 99.9% uptime SLA
+- **Disaster Recovery**: 4-hour RTO, 24-hour RPO
+- **Compliance**: GDPR, SOC 2 Type II
+- **Monitoring**: Real-time metrics and alerts
 
-## **9. OUTPUT QUALITY RULES**
-✅ **Production-Ready** – APIs must handle errors, rate limits, and retries.
-✅ **Scalable** – MongoDB schema should support 10K+ user stories.
-✅ **Secure** – OAuth 2.0 for Jira/GitHub, encrypted file storage.
-✅ **Well-Documented** – API specs, schema diagrams, and setup guides.
-✅ **Enterprise-Grade** – Logging, monitoring, and CI/CD support.
+# Testing Governance
+1. **Unit Testing**
+   - 90%+ code coverage
+   - Mock external services (Jira, GitHub)
 
----
+2. **Integration Testing**
+   - End-to-end workflow tests
+   - Data consistency validation
 
-## **10. FINAL OBJECTIVE**
-The **Scrum Interface** must:
-✔ **Seamlessly integrate with Jira** (real-time sync).
-✔ **Store artifacts efficiently** (code, designs, test docs).
-✔ **Link GitHub code to user stories** (traceability).
-✔ **Track time & assignments** (predicted vs. actual effort).
-✔ **Support test documentation** (screenshots, bug logs).
-✔ **Be scalable & maintainable** (enterprise-ready).
+3. **Performance Testing**
+   - Load testing with 10x expected traffic
+   - Stress testing for MongoDB
 
----
+4. **Security Testing**
+   - Penetration testing
+   - Dependency vulnerability scanning
 
-**END OF CONSTITUTION**
+5. **User Acceptance Testing**
+   - Jira integration validation
+   - GitHub webhook testing
+   - Artifact upload/download verification
+
+# Production Readiness Requirements
+- **CI/CD Pipeline**: Automated testing and deployment
+- **Blue-Green Deployment**: Zero-downtime updates
+- **Feature Flags**: For gradual rollouts
+- **Rollback Plan**: Documented procedures
+- **Documentation**: API docs, runbooks, architecture diagrams
+- **Support Plan**: 24/7 monitoring, SLA-based response
+
+# Final Governance Principles
+1. **Traceability**: All changes must be auditable
+2. **Consistency**: Uniform data models across integrations
+3. **Extensibility**: Plugin architecture for new integrations
+4. **User-Centric**: Designed for developer productivity
+5. **Continuous Improvement**: Regular feedback loops
+6. **Compliance**: Adherence to enterprise security standards
+
+This constitution ensures the Scrum Interface Platform will be enterprise-grade, secure, and fully integrated with existing Agile workflows while providing AI-enhanced features for improved productivity.

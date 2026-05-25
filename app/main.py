@@ -154,8 +154,8 @@ Text:
                 "retrieved_context": retrieved_context,
                 "constitution": "",
                 "specification": "",
-                "planning": "",
-                "task": "",
+                # "planning": "",
+                # "task": "",
                 "user_story": ""
             }
 
