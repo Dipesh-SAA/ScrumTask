@@ -1,25 +1,22 @@
 import os
 import requests
 import numpy as np
+from dotenv import load_dotenv
+from langchain_openai import OpenAIEmbeddings
 
-OLLAMA_URL = "http://localhost:11434/api/embed"
-MODEL_NAME = os.getenv("OLLAMA_EMBEDDING_MODEL", "deepseek-r1:1.5b")
+load_dotenv()
+
+MODEL_NAME = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+embeddings = OpenAIEmbeddings(
+    model=MODEL_NAME,
+    api_key=os.getenv("OPENAI_API_KEY"),
+)
 
 API_URL = "https://vibeapp.saa.ai/DocUploadApi/api/document/GetDataInQdrant?collectionName=AI%20Agent%20specific%20Constitution"
 
 
 def generate_embedding(text):
-    response = requests.post(
-        OLLAMA_URL,
-        json={
-            "model": MODEL_NAME,
-            "input": text
-        },
-        timeout=60
-    )
-
-    response.raise_for_status()
-    return response.json()["embeddings"][0]
+    return embeddings.embed_query(text)
 
 
 def get_constitution_chunks():
