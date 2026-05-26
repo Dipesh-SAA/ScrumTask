@@ -6,7 +6,7 @@ from app.Infrastrature.llm.loader import llm
 from app.Prompts.get_prompt_template_constitution import CONSTITUTION_GENERATOR_PROMPT
 # from app.Prompts.get_prompt_template_planning import PLANNING_GENERATOR_PROMPT
 from app.Prompts.get_prompt_template_specification import SPECIFICATION_GENERATOR_PROMPT
-# from app.Prompts.get_prompt_template_task import TASK_GENERATOR_PROMPT
+from app.Prompts.get_prompt_template_task import TASK_GENERATOR_PROMPT
 from app.Schema.State import InputState
 
 from app.Prompts.get_prompt_template_user_story import (
@@ -130,3 +130,15 @@ async def chat_user_story_llm(
 
 
 
+
+async def chat_task_llm(state: InputState):
+    formatted_messages = TASK_GENERATOR_PROMPT.invoke(
+        {
+            "constitution": state["constitution"],
+            "user_input": state["user_input"],
+            "user_story": state["user_story"],
+        }
+    )
+    response = await llm.ainvoke(formatted_messages)
+    save_markdown("task.md", response.content)
+    return {"task": response.content}

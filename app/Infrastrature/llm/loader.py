@@ -1,32 +1,79 @@
 from dotenv import load_dotenv
 import os
-from langchain_mistralai import ChatMistralAI
-from langchain_ollama import ChatOllama
 load_dotenv()
+from langchain_mistralai import ChatMistralAI
+from langchain_openai import ChatOpenAI
 
 
+# llm =ChatOpenAI(
+#        model=os.getenv("OPENAI_MODEL", "gpt-4"),
+#     temperature=0,
+#        api_key=os.getenv("OPENAI_API_KEY")
 
+# )
 
-llm= ChatMistralAI(
-        model=os.getenv("MISTRAL_MODEL", "mistral-large-latest"),
-        temperature=0,
+llm=ChatMistralAI(
+      model=os.getenv("MISTRAL_MODEL", "mistral-large-latest"),
+       temperature=0,
         api_key=os.getenv("MISTRAL_API_KEY"),
-    )
+  )
 
 
 
-# llm = ChatOllama(
-#     model=os.getenv("OLLAMA_MODEL", "mistral:7b"),
-#     temperature=0.5,
-# )
+# def _openai_llm():
+#     from langchain_openai import ChatOpenAI
+
+#     return ChatOpenAI(
+#         model=os.getenv("OPENAI_MODEL", "gpt-4"),
+#         temperature=0,
+#         api_key=os.getenv("OPENAI_API_KEY"),
+#     )
 
 
-# llm = ChatOllama(
-#     model=os.getenv("OLLAMA_MODEL", "deepseek-r1:latest"),
-#     temperature=0,
-# )
+# def _mistral_llm():
+#     from langchain_mistralai import ChatMistralAI
 
-# llm = ChatOllama(
-#     model=os.getenv("OLLAMA_MODEL"," qwen2.5-coder:7b"),
-#     temperature=0,
-# )
+#     return ChatMistralAI(
+#         model=os.getenv("MISTRAL_MODEL", "mistral-large-latest"),
+#         temperature=0,
+#         api_key=os.getenv("MISTRAL_API_KEY"),
+#     )
+
+
+# def _ollama_llm():
+#     from langchain_ollama import ChatOllama
+
+#     return ChatOllama(
+#         model=os.getenv("OLLAMA_MODEL", "deepseek-r1:latest"),
+#         temperature=0,
+#     )
+
+
+# def _load_llm():
+#     provider = os.getenv("LLM_PROVIDER", "auto").lower()
+
+#     if provider == "openai":
+#         return _openai_llm()
+
+#     if provider == "mistral":
+#         return _mistral_llm()
+
+#     if provider == "ollama":
+#         return _ollama_llm()
+
+#     if os.getenv("OPENAI_API_KEY"):
+#         try:
+#             return _openai_llm()
+#         except ModuleNotFoundError:
+#             pass
+
+#     if os.getenv("MISTRAL_API_KEY"):
+#         try:
+#             return _mistral_llm()
+#         except ModuleNotFoundError:
+#             pass
+
+#     return _ollama_llm()
+
+
+# llm = _load_llm()

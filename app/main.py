@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from app.utils.logger import logger
 
 
-api = FastAPI()
+api = FastAPI(root_path="/scrumTask")
 
 api.include_router(router)
 
@@ -155,7 +155,7 @@ Text:
                 "constitution": "",
                 "specification": "",
                 # "planning": "",
-                # "task": "",
+                "task": "",
                 "user_story": ""
             }
 

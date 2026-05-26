@@ -7,7 +7,7 @@ This constitution defines the governing framework for a Scrum Interface Platform
 The Scrum Interface Platform will:
 - Ingest tasks and user stories from Jira
 - Create structured artifact repositories (code snippets, design documents)
-- Link GitHub repositories to user stories
+- Link GitHub code to user stories
 - Track issue/bug logs per user story
 - Assign user stories to team members
 - Retrieve Epic and project metadata from Jira
@@ -19,7 +19,7 @@ The Scrum Interface Platform will:
 1. **Jira Integration**
    - Bi-directional sync of tasks, user stories, and Epics
    - Real-time status updates
-   - Metadata preservation (labels, priorities, sprints)
+   - Metadata preservation (labels, priorities, assignees)
 
 2. **Artifact Management**
    - Structured storage for code snippets, design documents
@@ -29,10 +29,10 @@ The Scrum Interface Platform will:
 3. **GitHub Integration**
    - Link commits/PRs to user stories
    - Branch association tracking
-   - Code review status sync
+   - Code review status synchronization
 
 4. **Bug/Issue Tracking**
-   - Log creation per user story
+   - Dedicated log per user story
    - Severity/priority classification
    - Resolution workflow
 
@@ -44,268 +44,261 @@ The Scrum Interface Platform will:
 6. **AI-Powered Features**
    - Task time prediction
    - Workload balancing suggestions
-   - Risk assessment
+   - Automated artifact categorization
 
 # Architecture Principles
-- **API-First Design**: All functionality exposed via RESTful APIs
+- **API-First Design**: All functionality exposed via RESTful endpoints
 - **Modular Components**: Separate services for Jira, GitHub, and artifact management
-- **Event-Driven**: Webhooks for real-time updates
-- **Scalable Storage**: MongoDB for flexible document schemas
+- **Event-Driven**: Real-time updates via webhooks
+- **Scalable Storage**: MongoDB for flexible document storage
 - **Security-First**: Role-based access control for all operations
 
 # MongoDB Collection Governance
 ## Collection Structure
 1. **UserStories**
-   ```json
-   {
-     "_id": ObjectId,
-     "jiraId": String,
-     "title": String,
-     "description": String,
-     "status": String,
-     "assignee": ObjectId,
-     "epicId": String,
-     "projectId": String,
-     "sprintId": String,
-     "priority": String,
-     "createdAt": Date,
-     "updatedAt": Date,
-     "predictedTime": Number,
-     "actualTime": Number
-   }
-   ```
+   - `jiraId` (String, required)
+   - `title` (String, required)
+   - `description` (String)
+   - `status` (Enum: To Do, In Progress, Done)
+   - `assignee` (ObjectId, ref: Users)
+   - `epicId` (String)
+   - `projectId` (String)
+   - `priority` (Enum: High, Medium, Low)
+   - `createdAt` (Date)
+   - `updatedAt` (Date)
+   - `predictedTime` (Number, hours)
+   - `actualTime` (Number, hours)
 
 2. **Artifacts**
-   ```json
-   {
-     "_id": ObjectId,
-     "userStoryId": ObjectId,
-     "type": String, // "code_snippet"|"design_doc"|"test_screenshot"
-     "name": String,
-     "description": String,
-     "storagePath": String,
-     "version": String,
-     "createdBy": ObjectId,
-     "createdAt": Date
-   }
-   ```
+   - `userStoryId` (ObjectId, ref: UserStories, required)
+   - `type` (Enum: Code Snippet, Design Document, Test Case)
+   - `content` (Binary or String)
+   - `version` (String)
+   - `createdBy` (ObjectId, ref: Users)
+   - `createdAt` (Date)
+   - `metadata` (Object)
 
 3. **BugsIssues**
-   ```json
-   {
-     "_id": ObjectId,
-     "userStoryId": ObjectId,
-     "title": String,
-     "description": String,
-     "severity": String,
-     "status": String,
-     "reportedBy": ObjectId,
-     "assignedTo": ObjectId,
-     "createdAt": Date,
-     "resolvedAt": Date
-   }
-   ```
+   - `userStoryId` (ObjectId, ref: UserStories, required)
+   - `title` (String, required)
+   - `description` (String)
+   - `status` (Enum: Open, In Progress, Resolved, Closed)
+   - `severity` (Enum: Critical, High, Medium, Low)
+   - `reportedBy` (ObjectId, ref: Users)
+   - `assignedTo` (ObjectId, ref: Users)
+   - `createdAt` (Date)
+   - `resolvedAt` (Date)
 
-4. **Tests**
-   ```json
-   {
-     "_id": ObjectId,
-     "userStoryId": ObjectId,
-     "testCaseId": String,
-     "screenshots": [{
-       "path": String,
-       "description": String,
-       "status": String // "pass"|"fail"|"pending"
-     }],
-     "status": String,
-     "executedBy": ObjectId,
-     "executedAt": Date
-   }
-   ```
+4. **TestScreenshots**
+   - `userStoryId` (ObjectId, ref: UserStories, required)
+   - `testCaseId` (String)
+   - `image` (Binary, required)
+   - `description` (String)
+   - `status` (Enum: Pass, Fail, Pending)
+   - `createdAt` (Date)
+   - `metadata` (Object)
 
 5. **GitHubLinks**
-   ```json
-   {
-     "_id": ObjectId,
-     "userStoryId": ObjectId,
-     "repo": String,
-     "branch": String,
-     "commitHash": String,
-     "prNumber": Number,
-     "type": String // "commit"|"pr"|"issue"
-   }
-   ```
+   - `userStoryId` (ObjectId, ref: UserStories, required)
+   - `repo` (String, required)
+   - `branch` (String)
+   - `commitHash` (String)
+   - `prNumber` (Number)
+   - `type` (Enum: Commit, PR, Branch)
+   - `createdAt` (Date)
+
+6. **Users**
+   - `jiraId` (String)
+   - `name` (String, required)
+   - `email` (String, required)
+   - `role` (Enum: Developer, QA, Product Owner, Scrum Master)
+   - `createdAt` (Date)
 
 ## Indexing Requirements
-- Compound index on `userStoryId` + `type` for artifacts
-- Text index on `title` and `description` for search
-- TTL index on temporary test data (if applicable)
+- Compound index on `UserStories` (jiraId, projectId)
+- Text index on `UserStories.title` and `UserStories.description`
+- Index on `Artifacts.userStoryId`
+- Index on `BugsIssues.userStoryId` and `BugsIssues.status`
+- Index on `TestScreenshots.userStoryId` and `TestScreenshots.status`
 
 # API Governance
-## Core API Principles
-- RESTful endpoints with JSON payloads
-- Versioned routes (`/api/v1/...`)
+## Core API Endpoints
+1. **Jira Integration**
+   - `POST /api/jira/sync` - Trigger full sync
+   - `GET /api/jira/epics/{projectId}` - Retrieve Epics
+   - `GET /api/jira/stories/{epicId}` - Retrieve user stories
+
+2. **User Stories**
+   - `GET /api/stories` - List with filters
+   - `POST /api/stories` - Create new
+   - `PUT /api/stories/{id}` - Update
+   - `GET /api/stories/{id}/artifacts` - Get artifacts
+   - `GET /api/stories/{id}/bugs` - Get bugs
+
+3. **Artifacts**
+   - `POST /api/artifacts` - Upload new
+   - `GET /api/artifacts/{id}` - Download
+   - `GET /api/artifacts` - List with filters
+
+4. **Bugs/Issues**
+   - `POST /api/bugs` - Create new
+   - `PUT /api/bugs/{id}` - Update status
+   - `GET /api/bugs` - List with filters
+
+5. **Testing**
+   - `POST /api/tests/screenshots` - Upload screenshot
+   - `GET /api/tests/screenshots/{id}` - Download
+   - `PUT /api/tests/screenshots/{id}/status` - Update status
+
+6. **GitHub Integration**
+   - `POST /api/github/link` - Link to user story
+   - `GET /api/github/links/{userStoryId}` - Get links
+
+## API Standards
+- RESTful design with JSON payloads
+- Versioned endpoints (`/api/v1/`)
 - Standard HTTP status codes
+- Pagination for list endpoints (`?page=1&limit=20`)
+- Filtering support (`?status=In Progress&priority=High`)
 - Rate limiting (1000 requests/minute per API key)
 - Request/response logging
 
-## Required Endpoints
-1. **Jira Integration**
-   - `POST /api/v1/jira/sync` - Trigger full sync
-   - `GET /api/v1/jira/stories` - List user stories
-   - `GET /api/v1/jira/epics` - List epics
-
-2. **User Story Management**
-   - `POST /api/v1/stories` - Create story
-   - `GET /api/v1/stories/{id}` - Get story details
-   - `PUT /api/v1/stories/{id}/assign` - Assign user
-
-3. **Artifact Management**
-   - `POST /api/v1/artifacts` - Upload artifact
-   - `GET /api/v1/artifacts/{id}` - Download artifact
-   - `GET /api/v1/stories/{id}/artifacts` - List artifacts
-
-4. **GitHub Integration**
-   - `POST /api/v1/github/link` - Link repository item
-   - `GET /api/v1/stories/{id}/github` - List linked items
-
-5. **Testing**
-   - `POST /api/v1/tests/screenshots` - Upload screenshot
-   - `PUT /api/v1/tests/{id}/status` - Update test status
-
-6. **AI Features**
-   - `GET /api/v1/stories/{id}/prediction` - Get time prediction
-
 # Authentication & Authorization Rules
-- **JWT-based authentication** with 1-hour token expiration
-- **API Key authentication** for service-to-service communication
-- **Role-Based Access Control (RBAC)** with:
-  - `admin`: Full access
-  - `developer`: Read/write to assigned stories
-  - `tester`: Read/write to tests
-  - `viewer`: Read-only access
-- **OAuth 2.0** for Jira/GitHub integration
-- **Data isolation** by project/team
+## Authentication
+- JWT-based authentication
+- OAuth 2.0 for Jira/GitHub integrations
+- API key support for service accounts
+
+## Authorization
+- Role-based access control (RBAC)
+- Permission matrix:
+
+| Role            | Create | Read | Update | Delete | Admin |
+|-----------------|--------|------|--------|--------|-------|
+| Developer       | Yes    | Yes  | Own    | Own    | No    |
+| QA              | Yes    | Yes  | Own    | Own    | No    |
+| Product Owner   | Yes    | Yes  | All    | All    | No    |
+| Scrum Master    | Yes    | Yes  | All    | All    | No    |
+| Admin           | Yes    | Yes  | All    | All    | Yes   |
+
+- Field-level permissions for sensitive data
+- Audit logging for all write operations
 
 # Integration Governance
 ## Jira Integration
-- Webhook-based real-time updates
-- Daily full sync for data consistency
-- Field mapping configuration
-- Error handling with retry logic
+- Webhook-based real-time sync
+- Polling fallback (every 15 minutes)
+- Data mapping:
+  - Jira status → Platform status
+  - Jira assignee → Platform user
+  - Jira labels → Platform tags
+- Conflict resolution for concurrent updates
 
 ## GitHub Integration
-- OAuth-based authentication
-- Webhook registration for push/PR events
-- Commit message parsing for story references
-- Rate limit management
+- Webhook support for push/PR events
+- OAuth token management
+- Branch protection rule synchronization
+- Commit message parsing for user story references
 
 # Artifact Governance
-- **Storage**: Cloud object storage (S3-compatible)
-- **Retention**: 30-day lifecycle for test screenshots
-- **Versioning**: Semantic versioning for design documents
-- **Access Control**: RBAC + story-level permissions
-- **Metadata**: Required fields for all artifacts
+- File size limits (10MB for code snippets, 50MB for documents)
+- Supported formats:
+  - Code: `.js`, `.py`, `.java`, `.go`, `.ts`
+  - Documents: `.pdf`, `.docx`, `.md`
+  - Images: `.png`, `.jpg`, `.jpeg`
+- Versioning with semantic version tags
+- Access control by user story
+- Automatic virus scanning
 
 # Validation Rules
-1. **Data Validation**
-   - Required fields for all collections
-   - Field type validation
-   - Reference integrity checks
-   - Size limits (e.g., 10MB max for screenshots)
-
-2. **Business Logic Validation**
-   - Status transitions (e.g., "In Progress" → "Done")
-   - Assignment rules (e.g., only one assignee per story)
-   - Time prediction bounds (e.g., 0.5-40 hours)
-
-3. **API Validation**
-   - Request payload validation
-   - Rate limit enforcement
-   - Idempotency for critical operations
+- Required fields validation
+- Status transition validation (e.g., cannot move from "To Do" to "Done" directly)
+- Data type validation
+- Referential integrity checks
+- Business rule validation (e.g., cannot assign to non-existent user)
+- Input sanitization for XSS prevention
 
 # Security Governance
-- **Data Encryption**: TLS 1.2+ for all communications
-- **Storage Encryption**: AES-256 for artifacts at rest
-- **Secret Management**: Environment variables for credentials
-- **Audit Logging**: All write operations logged
-- **Input Sanitization**: Protection against NoSQL injection
-- **CORS**: Restricted to approved domains
+- Data encryption at rest (AES-256)
+- Data encryption in transit (TLS 1.2+)
+- Regular security audits
+- Dependency vulnerability scanning
+- Secret management for API keys
+- IP whitelisting for admin endpoints
+- Rate limiting for all endpoints
 
 # Workflow Governance
-1. **User Story Lifecycle**
-   - Backlog → Ready → In Progress → Review → Done
-   - Mandatory artifacts before "Review" status
-   - Linked GitHub items before "Done"
+## User Story Lifecycle
+1. **Creation**
+   - Sync from Jira or manual creation
+   - Initial artifact structure created
+   - Time prediction generated
 
-2. **Bug/Issue Workflow**
-   - New → Triaged → In Progress → Resolved → Verified
-   - Mandatory resolution notes
+2. **In Progress**
+   - GitHub links added
+   - Artifacts updated
+   - Bugs/issues logged
 
-3. **Test Workflow**
-   - Draft → In Progress → Passed/Failed
-   - Screenshot upload required for "Passed/Failed"
+3. **Testing**
+   - Screenshots uploaded
+   - Test status updated
+   - Bugs resolved
+
+4. **Completion**
+   - All artifacts finalized
+   - All tests passed
+   - Time tracking completed
+
+## Artifact Workflow
+- Draft → In Review → Approved → Archived
+- Version control for all changes
+- Change history tracking
 
 # AI Agent Governance Rules
-- **Time Prediction Agent**:
-  - Uses historical data from similar tasks
-  - Considers assignee's past performance
-  - Updates predictions when new data is available
-
-- **Artifact Organization Agent**:
-  - Automatically tags artifacts by type
-  - Suggests missing artifact types
-  - Maintains version history
-
-- **Workflow Compliance Agent**:
-  - Validates status transitions
-  - Checks for required artifacts
-  - Flags missing GitHub links
+- Time prediction model trained on historical data
+- Workload balancing suggestions based on team capacity
+- Automated artifact categorization using NLP
+- Anomaly detection for unusual task patterns
+- Confidence thresholds for all AI-generated suggestions
 
 # Non Functional Requirements
 - **Performance**: <500ms response time for 95% of API calls
-- **Scalability**: Support 10,000+ concurrent users
+- **Scalability**: Support 10,000+ concurrent user stories
 - **Availability**: 99.9% uptime SLA
-- **Disaster Recovery**: 4-hour RTO, 24-hour RPO
+- **Durability**: 11 9's data durability
 - **Compliance**: GDPR, SOC 2 Type II
-- **Monitoring**: Real-time metrics and alerts
+- **Localization**: Support for UTF-8 in all text fields
+- **Auditability**: Full audit trail for all changes
 
 # Testing Governance
-1. **Unit Testing**
-   - 90%+ code coverage
-   - Mock external services (Jira, GitHub)
+## Test Types
+- **Unit Tests**: 80% coverage for all services
+- **Integration Tests**: All API endpoints
+- **E2E Tests**: Complete user story workflows
+- **Performance Tests**: Load testing for 10,000+ concurrent users
+- **Security Tests**: Penetration testing and vulnerability scanning
 
-2. **Integration Testing**
-   - End-to-end workflow tests
-   - Data consistency validation
-
-3. **Performance Testing**
-   - Load testing with 10x expected traffic
-   - Stress testing for MongoDB
-
-4. **Security Testing**
-   - Penetration testing
-   - Dependency vulnerability scanning
-
-5. **User Acceptance Testing**
-   - Jira integration validation
-   - GitHub webhook testing
-   - Artifact upload/download verification
+## Test Data Management
+- Synthetic data generation for testing
+- Data masking for production data used in tests
+- Test environment isolation
 
 # Production Readiness Requirements
-- **CI/CD Pipeline**: Automated testing and deployment
-- **Blue-Green Deployment**: Zero-downtime updates
-- **Feature Flags**: For gradual rollouts
-- **Rollback Plan**: Documented procedures
-- **Documentation**: API docs, runbooks, architecture diagrams
-- **Support Plan**: 24/7 monitoring, SLA-based response
+- **Monitoring**: Real-time dashboards for system health
+- **Alerting**: Immediate notifications for critical failures
+- **Logging**: Centralized log management with retention policies
+- **Backup**: Daily backups with point-in-time recovery
+- **Disaster Recovery**: RTO < 4 hours, RPO < 15 minutes
+- **Documentation**: Complete API documentation (OpenAPI/Swagger)
+- **Support**: 24/7 on-call rotation
 
 # Final Governance Principles
-1. **Traceability**: All changes must be auditable
-2. **Consistency**: Uniform data models across integrations
-3. **Extensibility**: Plugin architecture for new integrations
-4. **User-Centric**: Designed for developer productivity
-5. **Continuous Improvement**: Regular feedback loops
-6. **Compliance**: Adherence to enterprise security standards
+1. **Traceability**: All changes must be traceable to a user story or task
+2. **Accountability**: Clear ownership for all data and processes
+3. **Transparency**: All workflows must be visible to authorized users
+4. **Continuous Improvement**: Regular review of workflows and predictions
+5. **Data Integrity**: No data loss or corruption in any operation
+6. **User Experience**: Intuitive interfaces for all roles
+7. **Compliance**: Adherence to all relevant regulations and standards
 
-This constitution ensures the Scrum Interface Platform will be enterprise-grade, secure, and fully integrated with existing Agile workflows while providing AI-enhanced features for improved productivity.
+This constitution provides the governing framework for the Scrum Interface Platform while maintaining enterprise-grade standards for security, scalability, and Agile workflow management.

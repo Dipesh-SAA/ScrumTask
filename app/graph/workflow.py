@@ -40,7 +40,7 @@ from app.graph.nodes.node import (
     chat_constitution_llm,
     chat_specification_llm,
     # chat_planning_llm,
-    # chat_task_llm,
+    chat_task_llm,
     chat_user_story_llm,
 )
 
@@ -65,10 +65,10 @@ def create_graph():
     #     chat_planning_llm
     # )
 
-    # graph.add_node(
-    #     "task",
-    #     chat_task_llm
-    # )
+    graph.add_node(
+        "task",
+        chat_task_llm
+    )
 
     graph.add_node(
         "user_story",
@@ -84,9 +84,9 @@ def create_graph():
 
     # graph.add_edge("planning", "task")
 
-    # graph.add_edge("task", "user_story")
+    graph.add_edge("user_story", "task")
 
-    graph.add_edge("user_story", END)
+    graph.add_edge("task", END)
 
     memory = MemorySaver()
 

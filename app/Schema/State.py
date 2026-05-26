@@ -19,6 +19,6 @@ class InputState(TypedDict):
 
     # planning: str
 
-    # task: str
+    task: str
 
     user_story: str
