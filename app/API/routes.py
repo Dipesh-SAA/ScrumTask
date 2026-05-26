@@ -18,6 +18,124 @@ graph_app = create_graph()
 
 LOGGER_API = "https://vibeappop.saa.ai/EnterpriseLogging/api/Logs"
 
+
+def clean_markdown_value(value):
+    return re.sub(r"^\*+|\*+$", "", value.strip()).strip()
+
+
+def parse_markdown_list(text):
+    items = []
+
+    for line in text.splitlines():
+        line = line.strip()
+
+        if not line or line == "---":
+            continue
+
+        match = re.match(r"^(?:[-*]|\d+\.)\s*(.*)", line)
+
+        if match:
+            items.append(clean_markdown_value(match.group(1)))
+
+    return items
+
+
+def parse_label_value(block, label):
+    pattern = rf"\*?\*?{re.escape(label)}\*?\*?:\s*(.*)"
+    match = re.search(pattern, block, re.I)
+    return clean_markdown_value(match.group(1)) if match else ""
+
+
+def parse_story_list_section(block, heading):
+    pattern = (
+        rf"\*?\*?{re.escape(heading)}\*?\*?:\s*"
+        rf"(.*?)(?=\n\*?\*?[A-Z][A-Za-z ]+\*?\*?:|\n#|\Z)"
+    )
+    match = re.search(pattern, block, re.S)
+    return parse_markdown_list(match.group(1)) if match else []
+
+
+def parse_user_story(text):
+    if not text:
+        return {
+            "is_valid": True,
+            "project_overview": "",
+            "epics": [],
+            "user_stories": [],
+            "integration_expectations": [],
+            "security_expectations": [],
+            "validation_expectations": [],
+            "non_functional_expectations": [],
+            "testing_expectations": [],
+            "final_delivery_expectations": [],
+        }
+
+    if "# Invalid Feature Request" in text:
+        return {
+            "is_valid": False,
+            "message": clean_markdown_value(
+                text.replace("# Invalid Feature Request", "")
+            ),
+            "user_stories": [],
+        }
+
+    def section(name):
+        pattern = rf"# {re.escape(name)}\s*(.*?)(?=\n# |\Z)"
+        match = re.search(pattern, text, re.S)
+        return match.group(1).strip() if match else ""
+
+    stories_section = section("User Stories")
+    story_blocks = [
+        block.strip()
+        for block in re.split(r"\n---+\n|(?=\nUser Story ID:)", stories_section)
+        if "User Story ID:" in block
+    ]
+
+    user_stories = []
+
+    for block in story_blocks:
+        role_match = re.search(
+            r"As a\s+(.*?)\s*\nI want\s+(.*?)\s*\nSo that\s+(.*?)(?=\n)",
+            block,
+            re.S | re.I
+        )
+
+        user_stories.append({
+            "user_story_id": parse_label_value(block, "User Story ID"),
+            "title": parse_label_value(block, "Title"),
+            "epic": parse_label_value(block, "Epic"),
+            "feature": parse_label_value(block, "Feature"),
+            "role": clean_markdown_value(role_match.group(1)) if role_match else "",
+            "want": clean_markdown_value(role_match.group(2)) if role_match else "",
+            "business_value": clean_markdown_value(role_match.group(3)) if role_match else "",
+            "acceptance_criteria": parse_story_list_section(block, "Acceptance Criteria"),
+            "business_rules": parse_story_list_section(block, "Business Rules"),
+            "validation_rules": parse_story_list_section(block, "Validation Rules"),
+            "security_expectations": parse_story_list_section(block, "Security Expectations"),
+            "dependencies": parse_story_list_section(block, "Dependencies"),
+            "priority": parse_label_value(block, "Priority"),
+            "estimated_complexity": parse_label_value(block, "Estimated Complexity"),
+            "suggested_sprint": parse_label_value(block, "Suggested Sprint"),
+            "associated_collections": parse_story_list_section(block, "Associated Collections"),
+            "api_expectations": parse_story_list_section(block, "API Expectations"),
+            "edge_cases": parse_story_list_section(block, "Edge Cases"),
+            "definition_of_done": parse_story_list_section(block, "Definition of Done"),
+        })
+
+    return {
+        "is_valid": True,
+        "project_overview": clean_markdown_value(section("Project Overview")),
+        "epics": parse_markdown_list(section("Epic List")),
+        "user_stories": user_stories,
+        "integration_expectations": parse_markdown_list(section("Integration Expectations")),
+        "security_expectations": parse_markdown_list(section("Security Expectations")),
+        "validation_expectations": parse_markdown_list(section("Validation Expectations")),
+        "non_functional_expectations": parse_markdown_list(section("Non Functional Expectations")),
+        "testing_expectations": parse_markdown_list(section("Testing Expectations")),
+        "final_delivery_expectations": parse_markdown_list(section("Final Delivery Expectations")),
+    }
+
+
 def parse_tasks(text):
     tasks = []
 
@@ -246,7 +364,7 @@ async def ask_question(data: ChatRequest):
             # "specification": result.get("specification", ""),
             # "planning": result.get("planning", ""),
             # "task": result.get("task", ""),
-            "user_story": result.get("user_story", ""),
+            "user_story": parse_user_story(result.get("user_story", "")),
             "task": parse_tasks(result.get("task", "")),
         }
 

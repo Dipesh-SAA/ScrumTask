@@ -1,304 +1,66 @@
-# Scrum Interface Platform – Constitution File
+# Scrum Interface Project – Constitution File
 
 # Project Objective
-This constitution defines the governing framework for a Scrum Interface Platform that integrates with Jira, GitHub, and MongoDB to manage user stories, tasks, artifacts, bugs, and testing documentation. The platform will enable seamless Agile workflow management with AI-driven time prediction and artifact organization.
+The objective of this project is to create a MongoDB collection and API for a Scrum Interface that will receive tasks and user stories from Jira, create artifact structures for each user story, link with GitHub code, log issues or bugs, assign user stories to users, retrieve information about Epics and projects from Jira, and manage screenshots for testing purposes.
 
 # Project Scope
-The Scrum Interface Platform will:
-- Ingest tasks and user stories from Jira
-- Create structured artifact repositories (code snippets, design documents)
-- Link GitHub code to user stories
-- Track issue/bug logs per user story
-- Assign user stories to team members
-- Retrieve Epic and project metadata from Jira
-- Store and organize test screenshots with descriptions
-- Predict task completion times using historical data
-- Support enterprise-grade Agile workflows
+The project scope includes the development of a Scrum Interface with the following functionalities:
+- Receiving tasks and user stories from Jira
+- Creating artifact structures for each user story
+- Linking with GitHub code
+- Logging issues or bugs
+- Assigning user stories to users
+- Retrieving information about Epics and projects from Jira
+- Managing screenshots for testing purposes
 
 # Core Functional Expectations
-1. **Jira Integration**
-   - Bi-directional sync of tasks, user stories, and Epics
-   - Real-time status updates
-   - Metadata preservation (labels, priorities, assignees)
-
-2. **Artifact Management**
-   - Structured storage for code snippets, design documents
-   - Versioning support
-   - Searchable metadata
-
-3. **GitHub Integration**
-   - Link commits/PRs to user stories
-   - Branch association tracking
-   - Code review status synchronization
-
-4. **Bug/Issue Tracking**
-   - Dedicated log per user story
-   - Severity/priority classification
-   - Resolution workflow
-
-5. **Testing Documentation**
-   - Screenshot storage with descriptions
-   - Test case association
-   - Pass/fail status tracking
-
-6. **AI-Powered Features**
-   - Task time prediction
-   - Workload balancing suggestions
-   - Automated artifact categorization
+The Scrum Interface should be able to:
+- Receive tasks and user stories from Jira
+- Create artifact structures for each user story
+- Link with GitHub code
+- Log issues or bugs
+- Assign user stories to users
+- Retrieve information about Epics and projects from Jira
+- Manage screenshots for testing purposes
 
 # Architecture Principles
-- **API-First Design**: All functionality exposed via RESTful endpoints
-- **Modular Components**: Separate services for Jira, GitHub, and artifact management
-- **Event-Driven**: Real-time updates via webhooks
-- **Scalable Storage**: MongoDB for flexible document storage
-- **Security-First**: Role-based access control for all operations
+The architecture of the Scrum Interface should be designed to support the core functional expectations and should be aligned with the SPEC-KIT architecture workflow.
 
 # MongoDB Collection Governance
-## Collection Structure
-1. **UserStories**
-   - `jiraId` (String, required)
-   - `title` (String, required)
-   - `description` (String)
-   - `status` (Enum: To Do, In Progress, Done)
-   - `assignee` (ObjectId, ref: Users)
-   - `epicId` (String)
-   - `projectId` (String)
-   - `priority` (Enum: High, Medium, Low)
-   - `createdAt` (Date)
-   - `updatedAt` (Date)
-   - `predictedTime` (Number, hours)
-   - `actualTime` (Number, hours)
-
-2. **Artifacts**
-   - `userStoryId` (ObjectId, ref: UserStories, required)
-   - `type` (Enum: Code Snippet, Design Document, Test Case)
-   - `content` (Binary or String)
-   - `version` (String)
-   - `createdBy` (ObjectId, ref: Users)
-   - `createdAt` (Date)
-   - `metadata` (Object)
-
-3. **BugsIssues**
-   - `userStoryId` (ObjectId, ref: UserStories, required)
-   - `title` (String, required)
-   - `description` (String)
-   - `status` (Enum: Open, In Progress, Resolved, Closed)
-   - `severity` (Enum: Critical, High, Medium, Low)
-   - `reportedBy` (ObjectId, ref: Users)
-   - `assignedTo` (ObjectId, ref: Users)
-   - `createdAt` (Date)
-   - `resolvedAt` (Date)
-
-4. **TestScreenshots**
-   - `userStoryId` (ObjectId, ref: UserStories, required)
-   - `testCaseId` (String)
-   - `image` (Binary, required)
-   - `description` (String)
-   - `status` (Enum: Pass, Fail, Pending)
-   - `createdAt` (Date)
-   - `metadata` (Object)
-
-5. **GitHubLinks**
-   - `userStoryId` (ObjectId, ref: UserStories, required)
-   - `repo` (String, required)
-   - `branch` (String)
-   - `commitHash` (String)
-   - `prNumber` (Number)
-   - `type` (Enum: Commit, PR, Branch)
-   - `createdAt` (Date)
-
-6. **Users**
-   - `jiraId` (String)
-   - `name` (String, required)
-   - `email` (String, required)
-   - `role` (Enum: Developer, QA, Product Owner, Scrum Master)
-   - `createdAt` (Date)
-
-## Indexing Requirements
-- Compound index on `UserStories` (jiraId, projectId)
-- Text index on `UserStories.title` and `UserStories.description`
-- Index on `Artifacts.userStoryId`
-- Index on `BugsIssues.userStoryId` and `BugsIssues.status`
-- Index on `TestScreenshots.userStoryId` and `TestScreenshots.status`
+The MongoDB collection should be designed to store and manage the data required for the Scrum Interface. The collection should be designed with a focus on performance, scalability, and security.
 
 # API Governance
-## Core API Endpoints
-1. **Jira Integration**
-   - `POST /api/jira/sync` - Trigger full sync
-   - `GET /api/jira/epics/{projectId}` - Retrieve Epics
-   - `GET /api/jira/stories/{epicId}` - Retrieve user stories
-
-2. **User Stories**
-   - `GET /api/stories` - List with filters
-   - `POST /api/stories` - Create new
-   - `PUT /api/stories/{id}` - Update
-   - `GET /api/stories/{id}/artifacts` - Get artifacts
-   - `GET /api/stories/{id}/bugs` - Get bugs
-
-3. **Artifacts**
-   - `POST /api/artifacts` - Upload new
-   - `GET /api/artifacts/{id}` - Download
-   - `GET /api/artifacts` - List with filters
-
-4. **Bugs/Issues**
-   - `POST /api/bugs` - Create new
-   - `PUT /api/bugs/{id}` - Update status
-   - `GET /api/bugs` - List with filters
-
-5. **Testing**
-   - `POST /api/tests/screenshots` - Upload screenshot
-   - `GET /api/tests/screenshots/{id}` - Download
-   - `PUT /api/tests/screenshots/{id}/status` - Update status
-
-6. **GitHub Integration**
-   - `POST /api/github/link` - Link to user story
-   - `GET /api/github/links/{userStoryId}` - Get links
-
-## API Standards
-- RESTful design with JSON payloads
-- Versioned endpoints (`/api/v1/`)
-- Standard HTTP status codes
-- Pagination for list endpoints (`?page=1&limit=20`)
-- Filtering support (`?status=In Progress&priority=High`)
-- Rate limiting (1000 requests/minute per API key)
-- Request/response logging
+The API for the Scrum Interface should be designed to support the core functional expectations. The API should be designed with a focus on performance, scalability, and security.
 
 # Authentication & Authorization Rules
-## Authentication
-- JWT-based authentication
-- OAuth 2.0 for Jira/GitHub integrations
-- API key support for service accounts
-
-## Authorization
-- Role-based access control (RBAC)
-- Permission matrix:
-
-| Role            | Create | Read | Update | Delete | Admin |
-|-----------------|--------|------|--------|--------|-------|
-| Developer       | Yes    | Yes  | Own    | Own    | No    |
-| QA              | Yes    | Yes  | Own    | Own    | No    |
-| Product Owner   | Yes    | Yes  | All    | All    | No    |
-| Scrum Master    | Yes    | Yes  | All    | All    | No    |
-| Admin           | Yes    | Yes  | All    | All    | Yes   |
-
-- Field-level permissions for sensitive data
-- Audit logging for all write operations
+The Scrum Interface should implement robust authentication and authorization mechanisms to ensure that only authorized users can access and modify the data.
 
 # Integration Governance
-## Jira Integration
-- Webhook-based real-time sync
-- Polling fallback (every 15 minutes)
-- Data mapping:
-  - Jira status → Platform status
-  - Jira assignee → Platform user
-  - Jira labels → Platform tags
-- Conflict resolution for concurrent updates
-
-## GitHub Integration
-- Webhook support for push/PR events
-- OAuth token management
-- Branch protection rule synchronization
-- Commit message parsing for user story references
+The Scrum Interface should be designed to integrate seamlessly with Jira and GitHub. The integration should be designed with a focus on performance, scalability, and security.
 
 # Artifact Governance
-- File size limits (10MB for code snippets, 50MB for documents)
-- Supported formats:
-  - Code: `.js`, `.py`, `.java`, `.go`, `.ts`
-  - Documents: `.pdf`, `.docx`, `.md`
-  - Images: `.png`, `.jpg`, `.jpeg`
-- Versioning with semantic version tags
-- Access control by user story
-- Automatic virus scanning
+The Scrum Interface should be designed to manage artifacts associated with each user story. The artifact management should be designed with a focus on performance, scalability, and security.
 
 # Validation Rules
-- Required fields validation
-- Status transition validation (e.g., cannot move from "To Do" to "Done" directly)
-- Data type validation
-- Referential integrity checks
-- Business rule validation (e.g., cannot assign to non-existent user)
-- Input sanitization for XSS prevention
+The Scrum Interface should implement robust validation rules to ensure that the data received from Jira and GitHub is valid and consistent.
 
 # Security Governance
-- Data encryption at rest (AES-256)
-- Data encryption in transit (TLS 1.2+)
-- Regular security audits
-- Dependency vulnerability scanning
-- Secret management for API keys
-- IP whitelisting for admin endpoints
-- Rate limiting for all endpoints
+The Scrum Interface should be designed with a focus on security. This includes implementing robust authentication and authorization mechanisms, encrypting sensitive data, and regularly auditing the system for potential security vulnerabilities.
 
 # Workflow Governance
-## User Story Lifecycle
-1. **Creation**
-   - Sync from Jira or manual creation
-   - Initial artifact structure created
-   - Time prediction generated
-
-2. **In Progress**
-   - GitHub links added
-   - Artifacts updated
-   - Bugs/issues logged
-
-3. **Testing**
-   - Screenshots uploaded
-   - Test status updated
-   - Bugs resolved
-
-4. **Completion**
-   - All artifacts finalized
-   - All tests passed
-   - Time tracking completed
-
-## Artifact Workflow
-- Draft → In Review → Approved → Archived
-- Version control for all changes
-- Change history tracking
+The Scrum Interface should be designed to support the workflow of receiving tasks and user stories from Jira, creating artifact structures for each user story, linking with GitHub code, logging issues or bugs, assigning user stories to users, retrieving information about Epics and projects from Jira, and managing screenshots for testing purposes.
 
 # AI Agent Governance Rules
-- Time prediction model trained on historical data
-- Workload balancing suggestions based on team capacity
-- Automated artifact categorization using NLP
-- Anomaly detection for unusual task patterns
-- Confidence thresholds for all AI-generated suggestions
+The AI agent should be designed to support the core functional expectations of the Scrum Interface. The AI agent should be designed with a focus on performance, scalability, and security.
 
 # Non Functional Requirements
-- **Performance**: <500ms response time for 95% of API calls
-- **Scalability**: Support 10,000+ concurrent user stories
-- **Availability**: 99.9% uptime SLA
-- **Durability**: 11 9's data durability
-- **Compliance**: GDPR, SOC 2 Type II
-- **Localization**: Support for UTF-8 in all text fields
-- **Auditability**: Full audit trail for all changes
+The Scrum Interface should be designed with a focus on non-functional requirements such as performance, scalability, reliability, and security.
 
 # Testing Governance
-## Test Types
-- **Unit Tests**: 80% coverage for all services
-- **Integration Tests**: All API endpoints
-- **E2E Tests**: Complete user story workflows
-- **Performance Tests**: Load testing for 10,000+ concurrent users
-- **Security Tests**: Penetration testing and vulnerability scanning
-
-## Test Data Management
-- Synthetic data generation for testing
-- Data masking for production data used in tests
-- Test environment isolation
+The Scrum Interface should be thoroughly tested to ensure that it meets the core functional expectations and non-functional requirements. This includes unit testing, integration testing, performance testing, and security testing.
 
 # Production Readiness Requirements
-- **Monitoring**: Real-time dashboards for system health
-- **Alerting**: Immediate notifications for critical failures
-- **Logging**: Centralized log management with retention policies
-- **Backup**: Daily backups with point-in-time recovery
-- **Disaster Recovery**: RTO < 4 hours, RPO < 15 minutes
-- **Documentation**: Complete API documentation (OpenAPI/Swagger)
-- **Support**: 24/7 on-call rotation
+The Scrum Interface should be designed to be production-ready. This includes implementing robust error handling mechanisms, logging, monitoring, and alerting.
 
 # Final Governance Principles
-1. **Traceability**: All changes must be traceable to a user story or task
-2. **Accountability**: Clear ownership for all data and processes
-3. **Transparency**: All workflows must be visible to authorized users
-4. **Continuous Improvement**: Regular review of workflows and predictions
-5. **Data Integrity**: No data loss or corruption in any operation
-6. **User Experience**: Intuitive interfaces for all roles
-7. **Compliance**: Adherence to all relevant regulations and standards
-
-This constitution provides the governing framework for the Scrum Interface Platform while maintaining enterprise-grade standards for security, scalability, and Agile workflow management.
+The Scrum Interface should be designed and developed in accordance with the principles outlined in this constitution. This includes a focus on performance, scalability, security, and alignment with the SPEC-KIT architecture workflow.

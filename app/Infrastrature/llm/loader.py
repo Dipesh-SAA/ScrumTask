@@ -5,18 +5,24 @@ from langchain_mistralai import ChatMistralAI
 from langchain_openai import ChatOpenAI
 
 
-# llm =ChatOpenAI(
-#        model=os.getenv("OPENAI_MODEL", "gpt-4"),
-#     temperature=0,
-#        api_key=os.getenv("OPENAI_API_KEY")
+def get_int_env(name, default):
+    value = os.getenv(name)
+    return int(value) if value else default
 
-# )
 
-llm=ChatMistralAI(
-      model=os.getenv("MISTRAL_MODEL", "mistral-large-latest"),
-       temperature=0,
-        api_key=os.getenv("MISTRAL_API_KEY"),
-  )
+llm = ChatOpenAI(
+       model=os.getenv("OPENAI_MODEL", "gpt-4"),
+    temperature=0,
+       api_key=os.getenv("OPENAI_API_KEY"),
+       max_tokens=get_int_env("OPENAI_MAX_COMPLETION_TOKENS", 3500)
+
+)
+
+# llm=ChatMistralAI(
+#       model=os.getenv("MISTRAL_MODEL", "mistral-large-latest"),
+#        temperature=0,
+#         api_key=os.getenv("MISTRAL_API_KEY"),
+#   )
 
 
 

@@ -12,7 +12,7 @@ embeddings = OpenAIEmbeddings(
     api_key=os.getenv("OPENAI_API_KEY"),
 )
 
-API_URL = "https://vibeapp.saa.ai/DocUploadApi/api/document/GetDataInQdrant?collectionName=AI%20Agent%20specific%20Constitution"
+API_URL = "https://vibeapp.saa.ai/DocUploadApi/api/document/GetDataInQdrant?collectionName=AI%20%20Agent%20Global%20Consitution%20%281%29"
 
 
 def generate_embedding(text):
