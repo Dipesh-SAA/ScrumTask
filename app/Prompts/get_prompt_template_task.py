@@ -237,6 +237,18 @@ Do NOT:
 - reuse labels incorrectly
 - mix acceptance criteria into Points To Do
 ===============================
+TASK NAME RULES
+Task Name must:
+- be different from the user story Title
+- not copy or lightly reword the user story Title
+- clearly state the implementation work to be done
+- summarize what the Task Description is asking to complete
+- start with an action verb such as Build, Create, Configure, Validate, Integrate, Implement, Prepare, or Enable
+- be concise, specific, and task-focused
+
+If the user story Title is "User Login", the Task Name must not be "User Login".
+Use a task-focused name such as "Implement Secure Login Flow" or "Validate User Login Behavior".
+===============================
 OUTPUT RULES (STRICT)
 Do NOT use markdown.
 Do NOT add explanations.
