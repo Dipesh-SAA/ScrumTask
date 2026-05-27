@@ -1,66 +1,52 @@
-# Scrum Interface Project – Constitution File
+# User Login Flow – Constitution File
 
 # Project Objective
-The objective of this project is to create a MongoDB collection and API for a Scrum Interface that will receive tasks and user stories from Jira, create artifact structures for each user story, link with GitHub code, log issues or bugs, assign user stories to users, retrieve information about Epics and projects from Jira, and manage screenshots for testing purposes.
+To implement a secure and efficient user login flow using login API and JWT authentication in an AI-native enterprise platform.
 
 # Project Scope
-The project scope includes the development of a Scrum Interface with the following functionalities:
-- Receiving tasks and user stories from Jira
-- Creating artifact structures for each user story
-- Linking with GitHub code
-- Logging issues or bugs
-- Assigning user stories to users
-- Retrieving information about Epics and projects from Jira
-- Managing screenshots for testing purposes
+The project involves the creation of a user login flow that includes successful user login, JWT token generation, error handling for invalid credentials, and a loader during user save operation.
 
 # Core Functional Expectations
-The Scrum Interface should be able to:
-- Receive tasks and user stories from Jira
-- Create artifact structures for each user story
-- Link with GitHub code
-- Log issues or bugs
-- Assign user stories to users
-- Retrieve information about Epics and projects from Jira
-- Manage screenshots for testing purposes
+- Successful user login
+- JWT token generation
+- Error handling for invalid credentials
+- Loader during user save operation
 
 # Architecture Principles
-The architecture of the Scrum Interface should be designed to support the core functional expectations and should be aligned with the SPEC-KIT architecture workflow.
-
-# MongoDB Collection Governance
-The MongoDB collection should be designed to store and manage the data required for the Scrum Interface. The collection should be designed with a focus on performance, scalability, and security.
+The architecture should support scalable AI operations, with a focus on Agile delivery, incremental implementation, enterprise-grade engineering, AI-first architecture, dependency-aware planning, sprint-based execution, and production-ready delivery.
 
 # API Governance
-The API for the Scrum Interface should be designed to support the core functional expectations. The API should be designed with a focus on performance, scalability, and security.
+The API Developer is responsible for the implementation of the login API, which includes REST APIs, authentication, AI orchestration APIs, backend integrations, and workflow services.
 
 # Authentication & Authorization Rules
-The Scrum Interface should implement robust authentication and authorization mechanisms to ensure that only authorized users can access and modify the data.
+The system should use JWT for authentication and authorization. The JWT token should be generated upon successful user login. Invalid credentials should return an error message.
 
 # Integration Governance
-The Scrum Interface should be designed to integrate seamlessly with Jira and GitHub. The integration should be designed with a focus on performance, scalability, and security.
+The login API should be integrated with the frontend to facilitate user login. The API Developer and UI Developer are responsible for this integration.
 
 # Artifact Governance
-The Scrum Interface should be designed to manage artifacts associated with each user story. The artifact management should be designed with a focus on performance, scalability, and security.
+The artifacts produced during the project should be managed and stored securely. This includes the JWT tokens generated during user login.
 
 # Validation Rules
-The Scrum Interface should implement robust validation rules to ensure that the data received from Jira and GitHub is valid and consistent.
+The system should validate user credentials during login. Invalid credentials should return an error message.
 
 # Security Governance
-The Scrum Interface should be designed with a focus on security. This includes implementing robust authentication and authorization mechanisms, encrypting sensitive data, and regularly auditing the system for potential security vulnerabilities.
+The system should adhere to best practices for security, including secure handling and storage of JWT tokens and user credentials.
 
 # Workflow Governance
-The Scrum Interface should be designed to support the workflow of receiving tasks and user stories from Jira, creating artifact structures for each user story, linking with GitHub code, logging issues or bugs, assigning user stories to users, retrieving information about Epics and projects from Jira, and managing screenshots for testing purposes.
+The workflow should be designed to facilitate a smooth user login process. This includes the generation of JWT tokens upon successful login and the display of a loader during user save operation.
 
 # AI Agent Governance Rules
-The AI agent should be designed to support the core functional expectations of the Scrum Interface. The AI agent should be designed with a focus on performance, scalability, and security.
+The AI agent should generate realistic enterprise-grade implementation plans focused only on AI-related modules and workflows.
 
-# Non Functional Requirements
-The Scrum Interface should be designed with a focus on non-functional requirements such as performance, scalability, reliability, and security.
+# Non-Functional Requirements
+The system should be scalable, reliable, and performant. It should also include work related to security, monitoring, logging, error handling, AI governance, access control, performance optimization, and observability.
 
 # Testing Governance
-The Scrum Interface should be thoroughly tested to ensure that it meets the core functional expectations and non-functional requirements. This includes unit testing, integration testing, performance testing, and security testing.
+The system should undergo thorough testing, including AI testing, API testing, UI testing, and workflow testing.
 
 # Production Readiness Requirements
-The Scrum Interface should be designed to be production-ready. This includes implementing robust error handling mechanisms, logging, monitoring, and alerting.
+The system should be production-ready, with all features implemented and tested. This includes the user login flow, JWT token generation, error handling for invalid credentials, and the loader during user save operation.
 
 # Final Governance Principles
-The Scrum Interface should be designed and developed in accordance with the principles outlined in this constitution. This includes a focus on performance, scalability, security, and alignment with the SPEC-KIT architecture workflow.
+The final system should help the organization deliver enterprise AI capabilities efficiently, manage engineering workloads, accelerate AI delivery, scale AI systems properly, build production-grade AI workflows, and improve delivery governance.

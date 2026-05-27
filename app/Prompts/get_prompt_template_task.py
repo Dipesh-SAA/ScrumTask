@@ -148,7 +148,7 @@ Do NOT merge multiple user stories into one task.
 ===============================
 TASK GENERATION RULES
 If 1 user story → output 1 task
-If N user stories → output N tasks
+
 
 Maintain strict 1:1 mapping between user stories and tasks.
 
@@ -274,7 +274,7 @@ FINAL RULE
 
 1 USER STORY = 1 TASK
 
-MULTIPLE USER STORIES = MULTIPLE TASKS
+
 
 NO EXCEPTIONS.
 
