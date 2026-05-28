@@ -1,272 +1,104 @@
 # User Login Flow Constitution
 
 # Project Objective
-Define the governing framework for implementing a secure, scalable, and enterprise-grade user login flow with JWT authentication for the AI platform. This constitution ensures alignment with SPEC-KIT architecture while maintaining security, validation, and workflow standards.
+Establish a secure, scalable, and enterprise-grade user login flow for the AI platform, enabling robust authentication via API and JWT, with clear error handling, validation, and user experience standards.
 
 # Project Scope
-This constitution governs the implementation of:
-- User authentication API
-- JWT token generation and validation
-- Credential validation workflow
+- Implementation of user login API
+- JWT-based authentication
 - Error handling for invalid credentials
-- Loading state management during authentication
-- Integration with existing AI platform security infrastructure
+- UI loader integration during login
+- Alignment with enterprise AI platform security and workflow standards
 
 # Core Functional Expectations
-1. **User Authentication**:
-   - Validate user credentials against secure storage
-   - Return appropriate success/error responses
-   - Implement rate limiting to prevent brute force attacks
-
-2. **JWT Implementation**:
-   - Generate secure JWT tokens upon successful authentication
-   - Include standard claims (iss, exp, sub, etc.)
-   - Support token refresh mechanism
-   - Implement token revocation for logout
-
-3. **User Experience**:
-   - Implement loading state during authentication
-   - Provide clear error messages for invalid credentials
-   - Maintain session consistency
-
-4. **Security**:
-   - Password hashing (bcrypt/scrypt/Argon2)
-   - Secure token storage (HttpOnly, Secure cookies)
-   - CSRF protection
-   - Input validation
+- Users must be able to log in successfully via API.
+- JWT tokens must be generated upon successful authentication.
+- Invalid credentials must return clear, actionable error messages.
+- UI must display a loader during the login/save user process.
+- All authentication flows must be auditable and traceable.
 
 # Architecture Principles
-1. **API-First Design**:
-   - RESTful endpoints for authentication
-   - Standard HTTP status codes
-   - JSON request/response format
+- API-first, modular, and scalable design
+- Stateless authentication using JWT
+- Separation of concerns between UI, API, and authentication logic
+- Alignment with SPEC-KIT and enterprise AI architecture standards
 
-2. **Modularity**:
-   - Separate authentication service from business logic
-   - Configurable JWT settings
-   - Pluggable credential validation
-
-3. **Scalability**:
-   - Stateless authentication where possible
-   - Support for horizontal scaling
-   - Efficient token validation
-
-4. **Integration Readiness**:
-   - Standardized interfaces for platform integration
-   - Event-driven architecture for authentication events
-   - Compatibility with existing AI platform modules
+# MongoDB Collection Governance
+- User credentials and authentication data must be stored securely in a dedicated MongoDB collection.
+- Sensitive fields (e.g., passwords) must be hashed and never stored in plaintext.
+- Access to user collections must be restricted to authentication services only.
+- Audit logs for login attempts must be maintained for traceability.
 
 # API Governance
-1. **Endpoint Standards**:
-   - POST /api/auth/login - User authentication
-   - POST /api/auth/refresh - Token refresh
-   - POST /api/auth/logout - Token revocation
-   - GET /api/auth/validate - Token validation
-
-2. **Request/Response Standards**:
-   - Request: { "username": "string", "password": "string" }
-   - Success Response: { "token": "string", "expiresIn": "number", "user": "object" }
-   - Error Response: { "error": "string", "code": "number", "details": "object" }
-
-3. **Versioning**:
-   - API version in path (/v1/auth/login)
-   - Backward compatibility for at least 2 versions
+- Login API must follow RESTful conventions and enterprise naming standards.
+- All endpoints must validate input and sanitize data.
+- API responses must be structured, consistent, and include appropriate status codes.
+- JWT tokens must be issued only upon successful authentication.
+- Error responses must not leak sensitive information.
 
 # Authentication & Authorization Rules
-1. **JWT Standards**:
-   - HS256 or RS256 algorithm
-   - Minimum 256-bit secret key
-   - 15-30 minute access token expiration
-   - 7-30 day refresh token expiration
-
-2. **Password Policies**:
-   - Minimum 8 characters
-   - Require mixed case, numbers, and special characters
-   - Password history (last 5 passwords)
-   - Account lockout after 5 failed attempts
-
-3. **Session Management**:
-   - Short-lived access tokens
-   - Long-lived refresh tokens
-   - Token revocation on logout
-   - Concurrent session control
+- JWT tokens must be signed with secure, rotating secrets.
+- Token payloads must include user ID, roles, and expiration.
+- All protected endpoints must require valid JWT for access.
+- Invalid or expired tokens must result in immediate access denial.
+- Role-based access control (RBAC) must be enforced for all user actions.
 
 # Integration Governance
-1. **Platform Integration**:
-   - Standardized authentication middleware
-   - Role-based access control integration
-   - Event publishing for authentication events
-
-2. **Third-Party Integration**:
-   - OAuth2/OIDC support for social logins
-   - SAML support for enterprise SSO
-   - Standardized error handling for integrations
+- UI must integrate with the login API using secure HTTPS.
+- Loader must be displayed during authentication requests.
+- JWT tokens must be securely stored on the client (e.g., HTTP-only cookies or secure storage).
+- API and UI integration must be tested for race conditions and error handling.
 
 # Artifact Governance
-1. **Configuration**:
-   - Environment-specific JWT settings
-   - Secure credential storage
-   - Rate limiting configuration
-
-2. **Documentation**:
-   - API specification (OpenAPI/Swagger)
-   - Authentication flow diagrams
-   - Security considerations
-
-3. **Logging**:
-   - Authentication attempts (success/failure)
-   - Token generation/validation events
-   - Sensitive data redaction
+- All API contracts, JWT schemas, and error models must be documented and version-controlled.
+- UI/UX wireframes for the login flow must be reviewed and approved.
+- Authentication logic must be peer-reviewed and security-audited.
 
 # Validation Rules
-1. **Input Validation**:
-   - Username format validation
-   - Password strength validation
-   - Request payload validation
-
-2. **Business Logic Validation**:
-   - User existence check
-   - Account status validation (active/suspended)
-   - Credential matching
-
-3. **Token Validation**:
-   - Signature verification
-   - Expiration check
-   - Issuer validation
-   - Audience validation
+- Input validation for username/email and password is mandatory.
+- All fields must be checked for format, length, and injection risks.
+- Invalid credentials must return a standardized error message.
+- Validation errors must not reveal which field failed for security reasons.
 
 # Security Governance
-1. **Data Protection**:
-   - Encryption at rest for credentials
-   - Encryption in transit (TLS 1.2+)
-   - Secure password hashing
-
-2. **Vulnerability Prevention**:
-   - Protection against SQL injection
-   - Protection against XSS
-   - CSRF protection
-   - Clickjacking prevention
-
-3. **Compliance**:
-   - GDPR compliance for user data
-   - Password policy compliance
-   - Audit logging requirements
+- Passwords must be hashed using industry-standard algorithms (e.g., bcrypt).
+- JWT secrets must be stored in secure environment variables.
+- Brute-force and replay attack protections must be implemented.
+- All authentication flows must be monitored and logged.
+- Security testing (including penetration testing) is mandatory before production release.
 
 # Workflow Governance
-1. **Authentication Flow**:
-   - Credential submission → Validation → Token generation → Response
-   - Loading state management during processing
-   - Error handling at each step
-
-2. **Token Management**:
-   - Token generation workflow
-   - Token validation workflow
-   - Token refresh workflow
-   - Token revocation workflow
-
-3. **Error Handling**:
-   - Invalid credentials → 401 Unauthorized
-   - Account locked → 403 Forbidden
-   - Rate limited → 429 Too Many Requests
-   - Server error → 500 Internal Server Error
+- Login flow must be atomic and idempotent.
+- Loader must be shown during the entire authentication process.
+- All authentication events must be logged for audit and monitoring.
+- Error and success states must be clearly communicated to the user.
 
 # AI Agent Governance Rules
-1. **Task Generation**:
-   - Break down implementation into specific subtasks
-   - Assign appropriate roles (API Developer, Security Engineer)
-   - Include security and validation tasks
-   - Define clear acceptance criteria
-
-2. **Dependency Management**:
-   - Identify dependencies on user management system
-   - Identify dependencies on security infrastructure
-   - Plan for parallel development where possible
-
-3. **Testing Requirements**:
-   - Include unit, integration, and security tests
-   - Define test cases for all authentication scenarios
-   - Include performance testing for authentication endpoints
+- AI agents must not have access to raw user credentials.
+- AI workflow triggers must validate JWT before execution.
+- All agent-initiated actions must be traceable to an authenticated user context.
 
 # Non Functional Requirements
-1. **Performance**:
-   - Authentication response time < 500ms
-   - Support 1000+ concurrent authentications
-   - Token validation < 100ms
-
-2. **Scalability**:
-   - Horizontal scaling support
-   - Stateless design where possible
-   - Efficient token validation
-
-3. **Availability**:
-   - 99.9% uptime for authentication service
-   - Graceful degradation during peak loads
-   - Circuit breakers for dependent services
-
-4. **Maintainability**:
-   - Modular code structure
-   - Comprehensive logging
-   - Configuration-driven behavior
+- High availability and low latency for login API.
+- Scalability to support enterprise user volumes.
+- Robust error handling and observability.
+- Compliance with enterprise security and privacy standards.
 
 # Testing Governance
-1. **Unit Testing**:
-   - Credential validation logic
-   - Token generation/validation
-   - Error handling
-
-2. **Integration Testing**:
-   - API endpoint testing
-   - Database integration
-   - Security middleware testing
-
-3. **Security Testing**:
-   - Penetration testing
-   - Brute force testing
-   - Token security validation
-
-4. **Performance Testing**:
-   - Load testing
-   - Stress testing
-   - Response time validation
+- Unit and integration tests for login API and JWT logic.
+- Security tests for authentication flows (e.g., brute-force, token tampering).
+- UI tests for loader and error/success states.
+- End-to-end workflow validation for login scenarios.
+- Regression testing for all authentication changes.
 
 # Production Readiness Requirements
-1. **Monitoring**:
-   - Authentication success/failure rates
-   - Token generation/validation metrics
-   - Response time monitoring
-
-2. **Alerting**:
-   - Failed authentication attempts
-   - Unusual authentication patterns
-   - Service degradation alerts
-
-3. **Deployment**:
-   - Blue-green deployment support
-   - Rollback procedures
-   - Configuration management
-
-4. **Documentation**:
-   - Operational runbook
-   - Security procedures
-   - Troubleshooting guide
+- All authentication and login flows must pass security audits.
+- Monitoring and alerting for authentication failures and anomalies.
+- Documentation for API, JWT, and error handling must be complete.
+- Rollback and recovery procedures for authentication services must be defined.
 
 # Final Governance Principles
-1. **Security-First Approach**:
-   - All security requirements must be implemented before production
-   - Regular security audits
-   - Immediate patching of vulnerabilities
-
-2. **Continuous Improvement**:
-   - Regular review of authentication flows
-   - Monitoring of new security threats
-   - Periodic password policy review
-
-3. **Compliance Adherence**:
-   - Regular compliance checks
-   - Audit logging
-   - Data protection measures
-
-4. **User Experience Focus**:
-   - Clear error messages
-   - Responsive loading states
-   - Consistent behavior across clients
+- Security-first, API-first, and enterprise-grade design
+- Traceable, auditable, and scalable authentication workflows
+- Alignment with SPEC-KIT and AI platform architecture standards
+- Continuous improvement through testing, monitoring, and feedback
