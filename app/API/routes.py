@@ -177,6 +177,107 @@ def parse_tasks(text):
     return {"tasks": tasks}
 
 
+def normalize_strict_response(payload):
+    if not isinstance(payload, dict):
+        return []
+
+    user_stories = []
+
+    for story in payload.get("user_stories", []):
+        if not isinstance(story, dict):
+            continue
+
+        tasks = []
+        for task in story.get("tasks", []):
+            if not isinstance(task, dict):
+                continue
+
+            points_to_do = task.get("points_to_do", [])
+            if not isinstance(points_to_do, list):
+                points_to_do = []
+
+            acceptance_criteria = task.get("acceptance_criteria", [])
+            if not isinstance(acceptance_criteria, list):
+                acceptance_criteria = []
+
+            tasks.append({
+                "title": task.get("title", task.get("task_name", "")),
+                "task_description": task.get("task_description", ""),
+                "points_to_do": points_to_do,
+                "acceptance_criteria": acceptance_criteria,
+            })
+
+        story_acceptance_criteria = story.get("acceptance_criteria", [])
+        if not isinstance(story_acceptance_criteria, list):
+            story_acceptance_criteria = []
+
+        user_stories.append({
+            "user_story_id": story.get("user_story_id", ""),
+            "title": story.get("title", ""),
+            "description": story.get("description", ""),
+            "acceptance_criteria": story_acceptance_criteria,
+            "task_id": story.get("task_id", ""),
+            "tasks": tasks,
+            "time_period": story.get("time_period", ""),
+        })
+
+    return user_stories
+
+
+def parse_json_task_response(text):
+    if not text:
+        return []
+
+    cleaned_text = text.strip()
+
+    if cleaned_text.startswith("```"):
+        cleaned_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned_text, flags=re.S)
+
+    try:
+        payload = json.loads(cleaned_text)
+    except json.JSONDecodeError:
+        return []
+
+    return normalize_strict_response(payload)
+
+
+def build_strict_response(user_story_text, task_text):
+    json_user_stories = parse_json_task_response(task_text)
+
+    if json_user_stories:
+        return json_user_stories
+
+    parsed_user_story = parse_user_story(user_story_text)
+    user_stories = parsed_user_story.get("user_stories", [])
+    parsed_tasks = parse_tasks(task_text).get("tasks", [])
+
+    if not user_stories:
+        return []
+
+    response = []
+    for index, story in enumerate(user_stories):
+        task = parsed_tasks[index] if index < len(parsed_tasks) else {}
+
+        response.append({
+            "user_story_id": story.get("user_story_id", ""),
+            "title": story.get("title", ""),
+            "description": story.get("description", ""),
+            "acceptance_criteria": story.get("acceptance_criteria", []),
+            "task_id": task.get("task_id", ""),
+            "tasks": [
+                {
+                    "title": task.get("task_name", ""),
+                    "task_description": task.get("task_description", ""),
+                    "points_to_do": task.get("points_to_do", []),
+                    "acceptance_criteria": task.get("acceptance_criteria", []),
+                }
+            ] if task else [],
+            "time_period": task.get("time_period", ""),
+        })
+
+    return response
+
+
 
 def safe_logger(**kwargs):
 
@@ -333,13 +434,10 @@ async def ask_question(data: ChatRequest):
         # Return JSON response
         return {
             "success": True,
-            "input": data.question,
-            # "constitution": result.get("constitution", ""),
-            # "specification": result.get("specification", ""),
-            # "planning": result.get("planning", ""),
-            # "task": result.get("task", ""),
-            "user_story": parse_user_story(result.get("user_story", "")),
-            "task": parse_tasks(result.get("task", "")),
+            "user_stories": build_strict_response(
+                result.get("user_story", ""),
+                result.get("task", "")
+            ),
         }
 
     except Exception as e:
@@ -402,4 +500,3 @@ async def ask_question(data: ChatRequest):
             "success": False,
             "error": str(e)
         }
-

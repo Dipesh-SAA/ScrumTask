@@ -141,18 +141,19 @@ Input may contain:
 
 Each USER STORY must be treated independently.
 
-Each USER STORY = EXACTLY ONE TASK
+Each USER STORY = EXACTLY ONE TASK GROUP
 
-Do NOT split a single user story into multiple tasks.
+Split the task group into multiple task objects when the user story has multiple implementation areas.
 Do NOT merge multiple user stories into one task.
 ===============================
 TASK GENERATION RULES
-If 1 user story → output 1 task
+If 1 user story -> output 1 user story object.
+If N user stories -> output N user story objects.
 
 
-Maintain strict 1:1 mapping between user stories and tasks.
+Maintain strict 1:1 mapping between user stories and task groups.
 
-Each task must fully represent ALL important implementation details from its corresponding user story.
+Each user story object must fully represent ALL important implementation details from its corresponding user story.
 
 Do NOT omit:
 - security requirements
@@ -179,12 +180,12 @@ Do NOT introduce or assume:
 
 Use Sprint and Assignee ONLY if explicitly provided.
 
-Use a derived Task ID from each user story ID.
+Use one derived task_id from each user story ID for the complete task group.
 Example:
-US-001 → US-001
+US-001 -> US-001
 ===============================
 POINTS TO DO RULES
-Convert user story into grouped engineering work items.
+Convert user story into grouped task objects.
 
 Points To Do MUST include:
 - core implementation work
@@ -206,7 +207,9 @@ Do NOT:
 ===============================
 ACCEPTANCE CRITERIA RULES
 Acceptance Criteria must:
-- represent successful completion of ALL Points To Do
+- exist at the user story level
+- exist inside each task object
+- represent successful completion of each task object's Points To Do
 - be measurable and testable
 - include validation/security/testing outcomes if present
 - never be empty
@@ -250,45 +253,82 @@ If the user story Title is "User Login", the Task Name must not be "User Login".
 Use a task-focused name such as "Implement Secure Login Flow" or "Validate User Login Behavior".
 ===============================
 OUTPUT RULES (STRICT)
+Return ONLY valid JSON.
 Do NOT use markdown.
+Do NOT wrap JSON in code fences.
 Do NOT add explanations.
-Do NOT add headings outside task format.
+Do NOT add headings outside JSON.
+Do NOT add keys outside the strict JSON format.
 
-Start directly with TASK ID.
+Start directly with:
+{{"success": true, "user_stories": [
 
-Output ONLY tasks.
+Output ONLY the strict JSON response.
 
 Maintain original order of input user stories.
 ===============================
-OUTPUT FORMAT
+STRICT JSON FORMAT
 
-TASK ID:
-Priority:
-Task Name:
-
-Task Description:
-
-Points To Do:
-
-point
-point
-
-Acceptance Criteria:
-
-outcome
-outcome
-
-Time Period:
-Assigned Resource:
+{{
+  "success": true,
+  "user_stories": [
+    {{
+      "user_story_id": "US-001",
+      "title": "Implement Secure Login Flow",
+      "description": "User should securely log in using JWT authentication",
+      "acceptance_criteria": [
+        "User can log in with valid credentials",
+        "JWT token is generated after successful login",
+        "Invalid credentials return proper error response",
+        "Loader is displayed during login process"
+      ],
+      "task_id": "_id",
+      "tasks": [
+        {{
+          "title": "Create Login API Endpoint",
+          "task_description": "Develop secure login API endpoint for user authentication",
+          "points_to_do": [
+            "Create POST /api/auth/login endpoint",
+            "Accept email and password in request body",
+            "Validate request payload",
+            "Return proper API response"
+          ],
+          "acceptance_criteria": [
+            "API endpoint accepts valid request body",
+            "Invalid payload returns validation error",
+            "Successful request returns proper response format"
+          ]
+        }},
+        {{
+          "title": "Implement JWT Token Generation",
+          "task_description": "Generate JWT token after successful authentication",
+          "points_to_do": [
+            "Generate access token",
+            "Set token expiration",
+            "Add user claims in JWT",
+            "Secure token signing"
+          ],
+          "acceptance_criteria": [
+            "JWT token is generated successfully",
+            "Token contains required claims",
+            "Token expiration is properly configured",
+            "Token is securely signed"
+          ]
+        }}
+      ],
+      "time_period": "3 days"
+    }}
+  ]
+}}
 
 ===============================
 FINAL RULE
 
-1 USER STORY = 1 TASK
-
-
-
-NO EXCEPTIONS.
+1 USER STORY = 1 OBJECT INSIDE user_stories.
+1 USER STORY OBJECT = 1 task_id.
+1 USER STORY OBJECT may contain MULTIPLE task objects.
+Each task object must include title, task_description, points_to_do, and acceptance_criteria.
+Each user story object must include time_period as the final field.
 
 DO NOT OMIT IMPORTANT REQUIREMENTS FROM THE USER STORY.
 TIME PERIOD RULE
