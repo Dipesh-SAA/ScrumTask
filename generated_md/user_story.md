@@ -1,19 +1,16 @@
 # User Input
-The user requested implementation of a secure user login flow with JWT authentication. This includes creating a login API endpoint, generating JWT tokens upon successful authentication, handling invalid credentials with appropriate error responses, and implementing a loading state during the authentication process.
+Implement a secure user login flow with a login API and JWT authentication, ensuring successful login, JWT token generation, error handling for invalid credentials, and a UI loader during the authentication process.
 
 # User Story
 
-**User Story ID:** US-AUTH-001
-**Title:** Implement Secure User Login with JWT Authentication and Loading State
+User Story ID: US-AUTH-001  
+Title: Implement Secure User Login Flow with JWT Authentication  
+Description:  
+As a user of the AI platform, I want to securely log in via a dedicated API endpoint using my credentials so that I can access authorized features and workflows. Upon successful authentication, I should receive a JWT token for subsequent requests, and the UI should display a loader during the authentication process to provide clear feedback. Invalid login attempts must return a standardized error message without revealing sensitive information. All authentication events must be logged for audit and monitoring, and the solution must comply with enterprise security, validation, and integration standards.
 
-**Description:**
-As a platform user, I want to securely log in to the AI platform using my credentials so that I can access protected resources and features. The system should validate my username/email and password against the user store, generate a secure JWT token upon successful authentication, and return it with expiration details. During the authentication process, the system should display a loading state to provide visual feedback and prevent duplicate submissions. The login flow must adhere to enterprise security standards, including password hashing, rate limiting, and secure token transmission. This feature will enable secure, scalable, and user-friendly authentication across all platform services while maintaining compliance with security policies and providing a seamless user experience.
-
-**Acceptance Criteria:**
-- The system must implement a POST `/v1/auth/login` endpoint that accepts username/email and password in the request body and returns a JWT token upon successful authentication
-- The login API must validate user credentials against the user store, including checking account status (active/suspended) and comparing passwords against securely stored hashes (bcrypt/scrypt/Argon2)
-- Upon successful authentication, the system must generate a JWT token with standard claims (iss, sub, exp, iat) using a secure signing algorithm (HS256/RS256) and configurable expiration (15-30 minutes)
-- The frontend must display a loading indicator during authentication, disable the submit button to prevent duplicate submissions, and hide the loading indicator upon completion (success or failure)
-- The system must handle invalid credentials by returning a 401 Unauthorized response with a clear error message, implement rate limiting to return 429 Too Many Requests after 5 failed attempts, and log all authentication events for security monitoring
-- The JWT token must be transmitted securely over HTTPS, stored appropriately on the client side (memory preferred), and validated by backend middleware for protected routes
-- The system must implement input validation for username/email format and password length, sanitize all error messages to prevent information leakage, and maintain audit logs for all login attempts (successful and failed)
+Acceptance Criteria:
+- User can log in successfully with valid credentials via the login API, and receives a JWT token upon authentication.
+- JWT token includes user ID, roles, and expiration, and is securely generated and returned only after successful authentication.
+- Invalid credentials result in a standardized error message (e.g., "Invalid username or password") without leaking sensitive information or indicating which field failed.
+- A loader is displayed in the UI from the initiation of the login request until the authentication process completes (success or failure).
+- All authentication attempts (successful and failed) are logged with timestamp, user identifier, and outcome for audit and monitoring purposes.
