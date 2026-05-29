@@ -7,98 +7,95 @@ Establish a secure, scalable, and enterprise-grade user login flow for the AI pl
 - Implementation of user login API
 - JWT-based authentication
 - Error handling for invalid credentials
-- UI loader integration during login
+- UI loader integration during user save
 - Alignment with enterprise AI platform security and workflow standards
 
 # Core Functional Expectations
 - Users must be able to log in successfully via API.
 - JWT tokens must be generated upon successful authentication.
 - Invalid credentials must return clear, actionable error messages.
-- UI must display a loader during the login/save user process.
-- All authentication flows must be auditable and traceable.
+- UI must display a loader during user save operations.
+- All flows must be compatible with enterprise-grade AI platform requirements.
 
 # Architecture Principles
 - API-first, modular, and scalable design
 - Stateless authentication using JWT
 - Separation of concerns between UI, API, and authentication logic
-- Alignment with SPEC-KIT and enterprise AI architecture standards
+- Alignment with SPEC-KIT architecture and agile delivery
 
 # MongoDB Collection Governance
-- User credentials and authentication data must be stored securely in a dedicated MongoDB collection.
-- Sensitive fields (e.g., passwords) must be hashed and never stored in plaintext.
-- Access to user collections must be restricted to authentication services only.
-- Audit logs for login attempts must be maintained for traceability.
+- User credentials and authentication data must be stored securely.
+- Sensitive fields (e.g., passwords) must be hashed and never stored in plain text.
+- Access to user collections must be restricted to authorized services only.
+- Audit trails must be maintained for login attempts and authentication events.
 
 # API Governance
-- Login API must follow RESTful conventions and enterprise naming standards.
-- All endpoints must validate input and sanitize data.
-- API responses must be structured, consistent, and include appropriate status codes.
-- JWT tokens must be issued only upon successful authentication.
-- Error responses must not leak sensitive information.
+- RESTful API design using FastAPI or equivalent enterprise framework
+- Clear endpoint definitions for login and authentication
+- Consistent error response structure for invalid credentials
+- API endpoints must be versioned and documented
+- Rate limiting and abuse prevention must be enforced
 
 # Authentication & Authorization Rules
-- JWT tokens must be signed with secure, rotating secrets.
-- Token payloads must include user ID, roles, and expiration.
-- All protected endpoints must require valid JWT for access.
+- JWT tokens must be generated upon successful login and include necessary claims (user ID, roles, expiry).
+- Tokens must be signed with secure, rotating secrets.
+- All protected endpoints must validate JWT tokens for authenticity and expiry.
 - Invalid or expired tokens must result in immediate access denial.
-- Role-based access control (RBAC) must be enforced for all user actions.
+- Role-based access control must be enforced where applicable.
 
 # Integration Governance
-- UI must integrate with the login API using secure HTTPS.
-- Loader must be displayed during authentication requests.
-- JWT tokens must be securely stored on the client (e.g., HTTP-only cookies or secure storage).
-- API and UI integration must be tested for race conditions and error handling.
+- UI must integrate with login API using secure HTTPS.
+- Loader must be displayed during user save and authentication processes.
+- API responses must be handled gracefully in the UI, with clear feedback for success and failure.
+- Integration points must be tested for reliability and security.
 
 # Artifact Governance
-- All API contracts, JWT schemas, and error models must be documented and version-controlled.
-- UI/UX wireframes for the login flow must be reviewed and approved.
-- Authentication logic must be peer-reviewed and security-audited.
+- All API contracts, JWT schemas, and error response formats must be documented and version-controlled.
+- UI loader components and authentication flows must be reusable and modular.
+- Artifacts must be reviewed and approved by relevant stakeholders before release.
 
 # Validation Rules
-- Input validation for username/email and password is mandatory.
-- All fields must be checked for format, length, and injection risks.
-- Invalid credentials must return a standardized error message.
-- Validation errors must not reveal which field failed for security reasons.
+- User input must be validated for required fields, format, and length before API submission.
+- Invalid credentials must trigger clear, actionable error messages.
+- All validation logic must be consistent across UI and API layers.
 
 # Security Governance
 - Passwords must be hashed using industry-standard algorithms (e.g., bcrypt).
-- JWT secrets must be stored in secure environment variables.
-- Brute-force and replay attack protections must be implemented.
-- All authentication flows must be monitored and logged.
-- Security testing (including penetration testing) is mandatory before production release.
+- JWT secrets must be securely managed and rotated regularly.
+- All authentication flows must be protected against common vulnerabilities (e.g., brute force, replay attacks).
+- Sensitive data must never be exposed in logs or error messages.
+- Security audits must be conducted regularly.
 
 # Workflow Governance
-- Login flow must be atomic and idempotent.
-- Loader must be shown during the entire authentication process.
-- All authentication events must be logged for audit and monitoring.
-- Error and success states must be clearly communicated to the user.
+- Login flow must be integrated into the overall user onboarding and session management workflows.
+- Loader must be displayed during asynchronous operations to enhance user experience.
+- All authentication events must be logged for audit and monitoring purposes.
 
 # AI Agent Governance Rules
-- AI agents must not have access to raw user credentials.
-- AI workflow triggers must validate JWT before execution.
-- All agent-initiated actions must be traceable to an authenticated user context.
+- AI agents must respect authentication boundaries and use valid JWT tokens for all API interactions.
+- No agent or service may bypass authentication or authorization checks.
+- AI agents must log authentication failures and escalate repeated invalid attempts.
 
 # Non Functional Requirements
-- High availability and low latency for login API.
+- High availability and low latency for login API endpoints.
 - Scalability to support enterprise user volumes.
 - Robust error handling and observability.
 - Compliance with enterprise security and privacy standards.
 
 # Testing Governance
-- Unit and integration tests for login API and JWT logic.
-- Security tests for authentication flows (e.g., brute-force, token tampering).
-- UI tests for loader and error/success states.
-- End-to-end workflow validation for login scenarios.
-- Regression testing for all authentication changes.
+- Unit and integration tests for login API, JWT generation, and error handling.
+- Security testing for authentication flows (e.g., penetration testing, brute force resistance).
+- UI testing for loader display and error feedback.
+- End-to-end workflow validation for login and session management.
 
 # Production Readiness Requirements
-- All authentication and login flows must pass security audits.
-- Monitoring and alerting for authentication failures and anomalies.
-- Documentation for API, JWT, and error handling must be complete.
-- Rollback and recovery procedures for authentication services must be defined.
+- All authentication and login flows must be validated in staging before production release.
+- Monitoring and alerting must be enabled for authentication failures and anomalies.
+- Documentation must be complete and accessible for all relevant teams.
+- Rollback and recovery procedures must be defined for authentication components.
 
 # Final Governance Principles
-- Security-first, API-first, and enterprise-grade design
-- Traceable, auditable, and scalable authentication workflows
-- Alignment with SPEC-KIT and AI platform architecture standards
-- Continuous improvement through testing, monitoring, and feedback
+- Security-first, API-first, and enterprise-grade approach to user authentication.
+- All flows must be traceable, auditable, and compliant with organizational standards.
+- Continuous improvement and regular review of authentication mechanisms.
+- Alignment with SPEC-KIT architecture and agile delivery best practices.

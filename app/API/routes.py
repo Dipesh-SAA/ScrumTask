@@ -188,7 +188,9 @@ def normalize_strict_response(payload):
             continue
 
         tasks = []
-        for task in story.get("tasks", []):
+        story_id = story.get("user_story_id", "")
+
+        for index, task in enumerate(story.get("tasks", []), start=1):
             if not isinstance(task, dict):
                 continue
 
@@ -201,6 +203,7 @@ def normalize_strict_response(payload):
                 acceptance_criteria = []
 
             tasks.append({
+                "task_id": task.get("task_id", f"{story_id}-T{index:02d}" if story_id else ""),
                 "title": task.get("title", task.get("task_name", "")),
                 "task_description": task.get("task_description", ""),
                 "points_to_do": points_to_do,
@@ -212,11 +215,10 @@ def normalize_strict_response(payload):
             story_acceptance_criteria = []
 
         user_stories.append({
-            "user_story_id": story.get("user_story_id", ""),
+            "user_story_id": story_id,
             "title": story.get("title", ""),
             "description": story.get("description", ""),
             "acceptance_criteria": story_acceptance_criteria,
-            "task_id": story.get("task_id", ""),
             "tasks": tasks,
             "time_period": story.get("time_period", ""),
         })
@@ -263,9 +265,9 @@ def build_strict_response(user_story_text, task_text):
             "title": story.get("title", ""),
             "description": story.get("description", ""),
             "acceptance_criteria": story.get("acceptance_criteria", []),
-            "task_id": task.get("task_id", ""),
             "tasks": [
                 {
+                    "task_id": f"{story.get('user_story_id', '')}-T01" if story.get("user_story_id", "") else "",
                     "title": task.get("task_name", ""),
                     "task_description": task.get("task_description", ""),
                     "points_to_do": task.get("points_to_do", []),
