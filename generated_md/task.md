@@ -2,98 +2,125 @@
   "success": true,
   "user_stories": [
     {
-      "user_story_id": "US-AUTH-001",
-      "title": "Implement Secure User Login Flow with JWT Authentication",
-      "description": "As a user of the AI platform, I want to securely log in via a dedicated API endpoint using my credentials so that I can access authorized features and workflows. Upon successful authentication, I should receive a JWT token for subsequent requests, and the UI should display a loader during the authentication process to provide clear feedback. Invalid login attempts must return a standardized error message without revealing sensitive information. All authentication events must be logged for audit and monitoring, and the solution must comply with enterprise security, validation, and integration standards.",
+      "user_story_id": "US-AUTH-LOGIN-001",
+      "title": "Implement Secure User Login Flow with JWT Authentication and Loader Integration",
+      "description": "As a platform user, I want to securely log in to the AI platform via a RESTful API using my credentials, so that I can access protected resources with a JWT token while ensuring my authentication process is secure, reliable, and provides clear feedback. The system must generate a signed JWT token upon successful authentication, return actionable error messages for invalid credentials, and display a loader in the UI during user save and authentication operations. All authentication events must be logged for audit and monitoring, and the flow must comply with enterprise security, validation, and integration standards.",
       "acceptance_criteria": [
-        "User can log in successfully with valid credentials via the login API, and receives a JWT token upon authentication.",
-        "JWT token includes user ID, roles, and expiration, and is securely generated and returned only after successful authentication.",
-        "Invalid credentials result in a standardized error message (e.g., 'Invalid username or password') without leaking sensitive information or indicating which field failed.",
-        "A loader is displayed in the UI from the initiation of the login request until the authentication process completes (success or failure).",
-        "All authentication attempts (successful and failed) are logged with timestamp, user identifier, and outcome for audit and monitoring purposes."
+        "User can log in successfully via the API using valid credentials, and receives a signed JWT token containing user ID, roles, and expiry claims.",
+        "Invalid credentials result in a standardized, actionable error message without exposing sensitive information.",
+        "A loader is displayed in the UI during user save and authentication processes to provide real-time feedback.",
+        "All authentication events, including successful and failed login attempts, are logged and auditable in accordance with security and compliance requirements.",
+        "User credentials are validated for required fields, format, and length, and passwords are securely hashed before storage, with no plain text exposure at any point."
       ],
-      "task_id": "US-AUTH-001",
+      "task_id": "US-AUTH-LOGIN-001",
       "tasks": [
         {
+          "task_id": "US-AUTH-LOGIN-001-T01",
           "title": "Build Secure Login API Endpoint",
-          "task_description": "Develop a secure, RESTful login API endpoint that accepts user credentials, validates input, and handles authentication logic according to enterprise standards.",
+          "task_description": "Develop a RESTful API endpoint for user login that validates credentials, enforces security, and returns appropriate responses.",
           "points_to_do": [
-            "Design and implement POST /login endpoint following RESTful conventions.",
-            "Accept and validate username/email and password in the request body, enforcing format, length, and injection protection.",
-            "Hash and compare passwords securely; never store or log plaintext credentials.",
-            "Return standardized error message for invalid credentials without revealing which field failed.",
-            "Ensure all API responses are structured, consistent, and use appropriate status codes.",
-            "Sanitize all input and output to prevent injection and data leakage.",
-            "Log all authentication attempts (success and failure) with timestamp, user identifier, and outcome for audit and monitoring.",
-            "Ensure atomic and idempotent login workflow."
+            "Design and implement POST endpoint for user login accepting required credentials.",
+            "Validate input fields for presence, format, and length.",
+            "Check credentials against securely stored, hashed passwords.",
+            "Return standardized error messages for invalid credentials without exposing sensitive data.",
+            "Ensure API responses are consistent and actionable.",
+            "Enforce rate limiting and abuse prevention on the login endpoint."
           ],
           "acceptance_criteria": [
-            "API endpoint accepts valid credentials and returns appropriate responses.",
-            "Input validation and sanitization are enforced for all fields.",
-            "Invalid credentials return a standardized error message without field-specific details.",
-            "All authentication attempts are logged with required metadata.",
-            "No sensitive information is leaked in error responses."
+            "API endpoint accepts valid credentials and returns appropriate response.",
+            "Invalid credentials trigger standardized, non-sensitive error messages.",
+            "Input validation is enforced for all required fields.",
+            "Rate limiting is active and prevents abuse."
           ]
         },
         {
-          "title": "Implement JWT Token Generation and Secure Handling",
-          "task_description": "Generate a secure JWT token upon successful authentication, including required claims, and ensure proper signing, expiration, and secure delivery to the client.",
+          "task_id": "US-AUTH-LOGIN-001-T02",
+          "title": "Implement JWT Token Generation and Validation",
+          "task_description": "Generate a signed JWT token upon successful authentication, including required claims, and ensure secure token handling.",
           "points_to_do": [
-            "Generate JWT token only after successful authentication.",
-            "Include user ID, roles, and expiration in the JWT payload.",
-            "Sign JWT with secure, rotating secrets stored in environment variables.",
-            "Set appropriate token expiration and enforce stateless authentication.",
-            "Return JWT token in a secure, standardized response format.",
-            "Ensure JWT is not issued for failed authentication attempts.",
-            "Enforce RBAC in token claims for downstream authorization.",
-            "Log token issuance events for audit and monitoring."
+            "Generate JWT token with user ID, roles, and expiry claims after successful authentication.",
+            "Sign JWT token securely and configure token expiration.",
+            "Ensure JWT secrets are securely managed and rotated.",
+            "Validate JWT tokens for authenticity and expiry on protected endpoints.",
+            "Deny access for invalid or expired tokens."
           ],
           "acceptance_criteria": [
-            "JWT token is generated only after successful authentication.",
-            "Token contains user ID, roles, and expiration claims.",
-            "JWT is securely signed and expires as configured.",
-            "Token is returned in a secure and consistent response format.",
-            "Token issuance is logged for audit purposes."
+            "JWT token is generated and returned on successful login.",
+            "Token includes user ID, roles, and expiry claims.",
+            "Tokens are securely signed and expire as configured.",
+            "Invalid or expired tokens result in immediate access denial."
           ]
         },
         {
-          "title": "Integrate Loader in UI During Authentication Process",
-          "task_description": "Ensure the UI displays a loader from the initiation of the login request until authentication completes, providing clear feedback to the user.",
+          "task_id": "US-AUTH-LOGIN-001-T03",
+          "title": "Integrate Loader in UI During User Save and Authentication",
+          "task_description": "Display a loader in the UI during user save and authentication processes to provide real-time feedback.",
           "points_to_do": [
-            "Trigger loader display when login request is initiated.",
-            "Maintain loader visibility until authentication response is received (success or failure).",
-            "Hide loader immediately after authentication completes.",
-            "Test loader behavior for all login scenarios, including network delays and errors.",
-            "Ensure loader does not expose sensitive information or internal states."
+            "Implement loader component in the UI for user save and authentication operations.",
+            "Trigger loader display during asynchronous login and save actions.",
+            "Ensure loader is hidden upon completion or error.",
+            "Test loader behavior for all relevant user flows."
           ],
           "acceptance_criteria": [
-            "Loader is displayed during the entire authentication process.",
-            "Loader is hidden only after authentication completes.",
-            "Loader behavior is consistent across all login outcomes.",
-            "No sensitive information is exposed via loader or UI state."
+            "Loader is displayed during user save and authentication processes.",
+            "Loader is hidden after operation completes or fails.",
+            "Loader behavior is consistent and user experience is smooth."
           ]
         },
         {
-          "title": "Validate and Test Authentication Flow, Error Handling, and Logging",
-          "task_description": "Perform comprehensive validation and testing of the login flow, including input validation, error handling, security, logging, and audit requirements.",
+          "task_id": "US-AUTH-LOGIN-001-T04",
+          "title": "Log Authentication Events for Audit and Monitoring",
+          "task_description": "Log all authentication events, including successful and failed login attempts, for audit and compliance monitoring.",
           "points_to_do": [
-            "Write unit and integration tests for login API, JWT logic, and error handling.",
-            "Test input validation for all credential fields, including edge cases and injection attempts.",
-            "Verify standardized error messages for invalid credentials and validation failures.",
-            "Test loader display and hide logic in the UI for all authentication outcomes.",
-            "Validate that all authentication attempts are logged with required metadata.",
-            "Perform security testing for brute-force, replay, and token tampering attacks.",
-            "Ensure compliance with enterprise security, validation, and audit standards."
+            "Log all login attempts with timestamp, user identifier, and outcome.",
+            "Ensure logs do not contain sensitive data such as plain text passwords.",
+            "Maintain audit trails for authentication events.",
+            "Enable monitoring and alerting for authentication anomalies."
           ],
           "acceptance_criteria": [
-            "All tests for login API, JWT, error handling, and loader behavior pass.",
-            "Input validation and error handling meet security and privacy requirements.",
-            "Authentication events are fully logged and auditable.",
-            "No security vulnerabilities are present in the authentication flow."
+            "All authentication events are logged with required details.",
+            "Logs are auditable and compliant with security requirements.",
+            "Sensitive data is never exposed in logs.",
+            "Monitoring and alerting are enabled for authentication failures."
+          ]
+        },
+        {
+          "task_id": "US-AUTH-LOGIN-001-T05",
+          "title": "Validate and Securely Store User Credentials",
+          "task_description": "Ensure user credentials are validated and passwords are securely hashed before storage, with no plain text exposure.",
+          "points_to_do": [
+            "Validate user credentials for required fields, format, and length before processing.",
+            "Hash passwords using industry-standard algorithms before storing.",
+            "Never store or log plain text passwords.",
+            "Restrict access to user credential storage to authorized services only."
+          ],
+          "acceptance_criteria": [
+            "User credentials are validated before processing.",
+            "Passwords are securely hashed and never stored in plain text.",
+            "Access to credential storage is restricted.",
+            "No sensitive data is exposed in storage or logs."
+          ]
+        },
+        {
+          "task_id": "US-AUTH-LOGIN-001-T06",
+          "title": "Test Login Flow, JWT Authentication, and Loader Integration",
+          "task_description": "Perform comprehensive testing of the login API, JWT generation, error handling, loader UI, and logging for all scenarios.",
+          "points_to_do": [
+            "Write and execute unit and integration tests for login API and JWT generation.",
+            "Test error handling for invalid credentials and edge cases.",
+            "Test loader display and hiding in all relevant UI flows.",
+            "Validate logging and audit trails for authentication events.",
+            "Conduct security testing for authentication flows."
+          ],
+          "acceptance_criteria": [
+            "All tests for login, JWT, error handling, and loader pass successfully.",
+            "Edge cases and invalid credential scenarios are handled correctly.",
+            "Logging and audit trails are validated.",
+            "Security testing confirms compliance with requirements."
           ]
         }
       ],
-      "time_period": "5 days"
+      "time_period": "7 days"
     }
   ]
 }

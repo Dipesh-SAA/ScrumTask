@@ -282,9 +282,9 @@ STRICT JSON FORMAT
         "Invalid credentials return proper error response",
         "Loader is displayed during login process"
       ],
-      "task_id": "_id",
       "tasks": [
         {{
+          "task_id": "US-001-T01",
           "title": "Create Login API Endpoint",
           "task_description": "Develop secure login API endpoint for user authentication",
           "points_to_do": [
@@ -300,6 +300,7 @@ STRICT JSON FORMAT
           ]
         }},
         {{
+          "task_id": "US-001-T02",
           "title": "Implement JWT Token Generation",
           "task_description": "Generate JWT token after successful authentication",
           "points_to_do": [
@@ -325,9 +326,8 @@ STRICT JSON FORMAT
 FINAL RULE
 
 1 USER STORY = 1 OBJECT INSIDE user_stories.
-1 USER STORY OBJECT = 1 task_id.
 1 USER STORY OBJECT may contain MULTIPLE task objects.
-Each task object must include title, task_description, points_to_do, and acceptance_criteria.
+Each task object must include task_id, title, task_description, points_to_do, and acceptance_criteria.
 Each user story object must include time_period as the final field.
 
 DO NOT OMIT IMPORTANT REQUIREMENTS FROM THE USER STORY.
