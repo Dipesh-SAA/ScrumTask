@@ -17,8 +17,9 @@ class InputState(TypedDict):
 
     specification: str
 
-    # planning: str
+    # planning: str         
 
     task: str
 
     user_story: str
+    test_case:str
