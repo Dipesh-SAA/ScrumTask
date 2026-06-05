@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from fastapi import APIRouter
 from uuid import uuid4
+from pathlib import Path
 import json
 import re
 import socket
@@ -11,12 +12,24 @@ import traceback
 from datetime import datetime, timezone
 
 from app.graph.workflow import create_graph
+from app.graph.nodes.node import chat_test_case_llm
 from app.utils.logger import logger
 
 router = APIRouter()
 graph_app = create_graph()
 
 LOGGER_API = "https://vibeappop.saa.ai/EnterpriseLogging/api/Logs"
+BASE_DIR = Path(__file__).resolve().parents[2]
+GENERATED_MD_DIR = BASE_DIR / "generated_md"
+
+
+def read_generated_markdown(filename):
+    path = GENERATED_MD_DIR / filename
+
+    if not path.exists():
+        return ""
+
+    return path.read_text(encoding="utf-8")
 
 
 def clean_markdown_value(value):
@@ -243,6 +256,21 @@ def parse_json_task_response(text):
     return normalize_strict_response(payload)
 
 
+def parse_json_response(text):
+    if not text:
+        return None
+
+    cleaned_text = text.strip()
+
+    if cleaned_text.startswith("```"):
+        cleaned_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned_text, flags=re.S)
+
+    try:
+        return json.loads(cleaned_text)
+    except json.JSONDecodeError:
+        return None
+
+
 def build_strict_response(user_story_text, task_text):
     json_user_stories = parse_json_task_response(task_text)
 
@@ -362,10 +390,11 @@ async def ask_question(data: ChatRequest):
             "user_input": data.question,
             "retrieved_context": "",
             "constitution": "",
-            # "specification": "",
+            "specification":"" ,
             # "planning": "",
             "task": "",
-            "user_story": ""
+            "user_story": "",
+            "test_case": "",
         }
 
         config = {
@@ -502,3 +531,33 @@ async def ask_question(data: ChatRequest):
             "success": False,
             "error": str(e)
         }
+
+
+
+
+
+###Test case endpoint
+@router.post("/test")
+
+async def generate_test_case():
+    result = await chat_test_case_llm(
+        {
+            "constitution": read_generated_markdown("constitution.md"),
+            "specification": read_generated_markdown("specification.md"),
+            "user_story": read_generated_markdown("user_story.md"),
+        }
+    )
+
+    try:
+        return {
+            "success": True,
+            "test_case": json.loads(result.get("test_case", "{}")),
+        }
+    except json.JSONDecodeError:
+        return {
+            "success": False,
+            "error": "Generated test case response is not valid JSON.",
+            "test_case": result.get("test_case", ""),
+        }
+
+    

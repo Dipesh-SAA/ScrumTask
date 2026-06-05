@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 
 from app.Infrastrature.llm.loader import llm
 from app.Prompts.get_prompt_template_constitution import CONSTITUTION_GENERATOR_PROMPT
-# from app.Prompts.get_prompt_template_planning import PLANNING_GENERATOR_PROMPT
+from app.Prompts.get_prompt_template_test_case import TEST_CASE_GENERATOR_PROMPT
 from app.Prompts.get_prompt_template_specification import SPECIFICATION_GENERATOR_PROMPT
 from app.Prompts.get_prompt_template_task import TASK_GENERATOR_PROMPT
 from app.Schema.State import InputState
@@ -142,3 +142,17 @@ async def chat_task_llm(state: InputState):
     response = await llm.ainvoke(formatted_messages)
     save_markdown("task.md", response.content)
     return {"task": response.content}
+
+
+
+async def chat_test_case_llm(state: InputState):
+    formatted_messages = TEST_CASE_GENERATOR_PROMPT.invoke(
+        {
+            "constitution": state["constitution"],
+            "specification": state["specification"],
+            "user_story": state["user_story"],
+        }
+    )
+    response = await llm.ainvoke(formatted_messages)
+    save_markdown("test_case.md", response.content)
+    return {"test_case": response.content}
