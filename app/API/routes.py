@@ -319,7 +319,7 @@ def safe_logger(**kwargs):
 
 
 class ChatRequest(BaseModel):
-    task: str
+    user_input: str
 
 @router.post("/ask")
 async def ask_question(data: ChatRequest):
@@ -382,13 +382,13 @@ async def ask_question(data: ChatRequest):
             isSuccess=True,
 
             payloadJson=json.dumps({
-                "user_input": data.question
+                "user_input": data.user_input
             })
         )
 
         # Initial graph state
         initial_state = {
-            "user_input": data.question,
+            "user_input": data.user_input,
             "retrieved_context": "",
             "constitution": "",
             "specification":"" ,
@@ -524,7 +524,7 @@ async def ask_question(data: ChatRequest):
             isSuccess=False,
 
             payloadJson=json.dumps({
-                "user_input": data.question
+                "user_input": data.user_input
             })
         )
 
@@ -537,31 +537,31 @@ async def ask_question(data: ChatRequest):
 
 
 
-###Test case endpoint
-class TestCaseRequest(BaseModel):
-    constitution: str = ""
-    user_story: str
-    task: str
+# ###Test case endpoint
+# class TestCaseRequest(BaseModel):
+#     constitution: str = ""
+#     user_story: str
+#     task: str
 
 
-@router.post("/test")
-async def generate_test_case(request: TestCaseRequest):
+# @router.post("/test")
+# async def generate_test_case(request: TestCaseRequest):
 
-    result = await chat_test_case_llm(
-        user_story=request.user_story,
-        task=request.task,
-    )
+#     result = await chat_test_case_llm(
+#         user_story=request.user_story,
+#         task=request.task,
+#     )
 
-    try:
-        return {
-            "success": True,
-            "constitution": request.constitution,
-            "test_case": json.loads(result.get("test_case", "{}")),
-        }
+#     try:
+#         return {
+#             "success": True,
+#             "constitution": request.constitution,
+#             "test_case": json.loads(result.get("test_case", "{}")),
+#         }
 
-    except json.JSONDecodeError:
-        return {
-            "success": False,
-            "error": "Generated test case response is not valid JSON.",
-            "test_case": result.get("test_case", ""),
-        }
+#     except json.JSONDecodeError:
+#         return {
+#             "success": False,
+#             "error": "Generated test case response is not valid JSON.",
+#             "test_case": result.get("test_case", ""),
+#         }

@@ -1,9 +1,9 @@
 import asyncio
 from uuid import uuid4
-
+from app.test_case_agent.src.router import test_case_agent
 from app.graph.workflow import create_graph
 from fastapi import FastAPI
-from app.API.routes import router
+from app.api.routes import router
 from app.Infrastrature.embeddings.embedding_model import (generate_embedding,get_constitution_chunks, rank_chunks)
 import json
 import socket
@@ -16,8 +16,8 @@ from app.utils.logger import logger
 
 
 api = FastAPI(root_path="/scrumTask")
-
 api.include_router(router)
+api.include_router(test_case_agent)
 
 LOGGER_API = "https://vibeappop.saa.ai/EnterpriseLogging/api/Logs"
 
@@ -304,5 +304,13 @@ Text:
             print("\nERROR:")
             print(str(e))
 
-if __name__ == "__main__":
-    asyncio.run(chat())
+
+
+
+
+
+
+
+
+
+
