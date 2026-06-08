@@ -144,15 +144,19 @@ async def chat_task_llm(state: InputState):
     return {"task": response.content}
 
 
-
-async def chat_test_case_llm(state: InputState):
+#test case generation is the final step, it will take the constitution, user story and task to generate test cases. It will follow strict traceability rules to ensure that every test case is directly traceable to a User Story or Acceptance Criterion. It will not invent any values unless explicitly stated in the User Story. The generated test cases will be saved in a markdown file for further use.
+async def chat_test_case_llm(user_story: str, task: str):
     formatted_messages = TEST_CASE_GENERATOR_PROMPT.invoke(
         {
-            "constitution": state["constitution"],
-            "specification": state["specification"],
-            "user_story": state["user_story"],
+            "user_story": user_story,
+            "task": task,
         }
     )
+
     response = await llm.ainvoke(formatted_messages)
+
     save_markdown("test_case.md", response.content)
-    return {"test_case": response.content}
+
+    return {
+        "test_case": response.content
+    }

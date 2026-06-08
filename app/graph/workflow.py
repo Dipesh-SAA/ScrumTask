@@ -75,10 +75,10 @@ def create_graph():
         "user_story",
         chat_user_story_llm
     )
-    graph.add_node(
-        "test_case",
-        chat_test_case_llm
-    )
+    # graph.add_node(
+    #     "test_case",
+    #     chat_test_case_llm
+    # )
 
     # Flow
     graph.add_edge(START, "constitution")
@@ -91,8 +91,8 @@ def create_graph():
 
     graph.add_edge("user_story", "task")
 
-    graph.add_edge("task", "test_case")
-    graph.add_edge("test_case", END)
+    graph.add_edge("task", END)
+    # graph.add_edge("test_case", END)
 
     memory = MemorySaver()
 

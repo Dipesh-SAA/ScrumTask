@@ -319,12 +319,13 @@ def safe_logger(**kwargs):
 
 
 class ChatRequest(BaseModel):
-    question: str
+    task: str
 
 @router.post("/ask")
 async def ask_question(data: ChatRequest):
 
     start_time = time.time()
+
 
     session_id = str(uuid4())
     correlation_id = str(uuid4())
@@ -394,7 +395,7 @@ async def ask_question(data: ChatRequest):
             # "planning": "",
             "task": "",
             "user_story": "",
-            "test_case": "",
+            # "test_case": "",
         }
 
         config = {
@@ -537,27 +538,30 @@ async def ask_question(data: ChatRequest):
 
 
 ###Test case endpoint
-@router.post("/test")
+class TestCaseRequest(BaseModel):
+    constitution: str = ""
+    user_story: str
+    task: str
 
-async def generate_test_case():
+
+@router.post("/test")
+async def generate_test_case(request: TestCaseRequest):
+
     result = await chat_test_case_llm(
-        {
-            "constitution": read_generated_markdown("constitution.md"),
-            "specification": read_generated_markdown("specification.md"),
-            "user_story": read_generated_markdown("user_story.md"),
-        }
+        user_story=request.user_story,
+        task=request.task,
     )
 
     try:
         return {
             "success": True,
+            "constitution": request.constitution,
             "test_case": json.loads(result.get("test_case", "{}")),
         }
+
     except json.JSONDecodeError:
         return {
             "success": False,
             "error": "Generated test case response is not valid JSON.",
             "test_case": result.get("test_case", ""),
         }
-
-    

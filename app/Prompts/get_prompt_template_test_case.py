@@ -11,14 +11,13 @@ RULES:
 - No markdown
 - No explanation
 
-CONSTITUTION:
-{constitution}
+
 
 USER STORY:
 {user_story}
 
-SPCEFICIFATION:
-{specification}
+SUB_TASK:
+{task}                                                          
 
 STRICT TRACEABILITY RULES
 
