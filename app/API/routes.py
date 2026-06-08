@@ -319,12 +319,13 @@ def safe_logger(**kwargs):
 
 
 class ChatRequest(BaseModel):
-    question: str
+    user_input: str
 
 @router.post("/ask")
 async def ask_question(data: ChatRequest):
 
     start_time = time.time()
+
 
     session_id = str(uuid4())
     correlation_id = str(uuid4())
@@ -381,20 +382,20 @@ async def ask_question(data: ChatRequest):
             isSuccess=True,
 
             payloadJson=json.dumps({
-                "user_input": data.question
+                "user_input": data.user_input
             })
         )
 
         # Initial graph state
         initial_state = {
-            "user_input": data.question,
+            "user_input": data.user_input,
             "retrieved_context": "",
             "constitution": "",
             "specification":"" ,
             # "planning": "",
             "task": "",
             "user_story": "",
-            "test_case": "",
+            # "test_case": "",
         }
 
         config = {
@@ -523,7 +524,7 @@ async def ask_question(data: ChatRequest):
             isSuccess=False,
 
             payloadJson=json.dumps({
-                "user_input": data.question
+                "user_input": data.user_input
             })
         )
 
@@ -536,28 +537,31 @@ async def ask_question(data: ChatRequest):
 
 
 
-###Test case endpoint
-@router.post("/test")
+# ###Test case endpoint
+# class TestCaseRequest(BaseModel):
+#     constitution: str = ""
+#     user_story: str
+#     task: str
 
-async def generate_test_case():
-    result = await chat_test_case_llm(
-        {
-            "constitution": read_generated_markdown("constitution.md"),
-            "specification": read_generated_markdown("specification.md"),
-            "user_story": read_generated_markdown("user_story.md"),
-        }
-    )
 
-    try:
-        return {
-            "success": True,
-            "test_case": json.loads(result.get("test_case", "{}")),
-        }
-    except json.JSONDecodeError:
-        return {
-            "success": False,
-            "error": "Generated test case response is not valid JSON.",
-            "test_case": result.get("test_case", ""),
-        }
+# @router.post("/test")
+# async def generate_test_case(request: TestCaseRequest):
 
-    
+#     result = await chat_test_case_llm(
+#         user_story=request.user_story,
+#         task=request.task,
+#     )
+
+#     try:
+#         return {
+#             "success": True,
+#             "constitution": request.constitution,
+#             "test_case": json.loads(result.get("test_case", "{}")),
+#         }
+
+#     except json.JSONDecodeError:
+#         return {
+#             "success": False,
+#             "error": "Generated test case response is not valid JSON.",
+#             "test_case": result.get("test_case", ""),
+#         }
