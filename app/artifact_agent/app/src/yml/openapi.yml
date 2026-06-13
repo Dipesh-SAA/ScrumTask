@@ -1,0 +1,91 @@
+openapi: 3.0.3
+info:
+  title: Calculator API
+  version: 1.0.0
+  description: API for calculator operations
+servers:
+- url: https://api.example.com/v1
+  description: Production server
+paths:
+  /calculations:
+    post:
+      tags:
+      - calculations
+      summary: Create a calculation
+      operationId: createCalculation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculationCreateRequest'
+      responses:
+        '201':
+          description: Calculation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculationResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    CalculationCreateRequest:
+      type: object
+      properties:
+        operand1:
+          type: number
+        operand2:
+          type: number
+        operation:
+          type: string
+          enum:
+          - add
+          - subtract
+          - multiply
+          - divide
+    CalculationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        operand1:
+          type: number
+        operand2:
+          type: number
+        operation:
+          type: string
+        result:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer
+x-backend: .net

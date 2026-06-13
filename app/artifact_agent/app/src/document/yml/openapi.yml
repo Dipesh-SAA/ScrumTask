@@ -1,0 +1,66 @@
+openapi: 3.0.3
+info:
+  title: Create Calculator API
+  version: 1.0.0
+servers:
+- url: http://api.example.com/v1
+paths:
+  /calculator:
+    post:
+      summary: Perform calculation
+      operationId: performCalculation
+      tags:
+      - calculator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                operation:
+                  type: string
+                  enum:
+                  - add
+                  - subtract
+                  - multiply
+                  - divide
+                operands:
+                  type: array
+                  items:
+                    type: number
+              required:
+              - operation
+              - operands
+      responses:
+        '200':
+          description: Successful calculation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: number
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+x-backend: python
