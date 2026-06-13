@@ -1,0 +1,2 @@
+libcjson-dev
+libuuid-dev

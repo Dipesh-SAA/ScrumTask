@@ -10,7 +10,7 @@ import socket
 import threading
 import time
 import traceback
-
+from app.artifact_agent.app.src.api.routes.router import router as artifact_router
 from datetime import datetime, timezone
 from app.utils.logger import logger
 
@@ -18,7 +18,7 @@ from app.utils.logger import logger
 api = FastAPI(root_path="/scrumTask")
 api.include_router(router)
 api.include_router(test_case_agent)
-
+api.include_router(artifact_router)
 LOGGER_API = "https://vibeappop.saa.ai/EnterpriseLogging/api/Logs"
 
 
