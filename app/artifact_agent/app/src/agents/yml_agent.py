@@ -104,15 +104,16 @@ def save_openapi_yaml(
 
 async def yml_code_gen(
     task: str,
-    techstack: str
-    
-
+    techstack: str,
+    instructions: str
 ):
     try:
 
         user_input = f"""
 Task:
 {task}
+instructions:
+{instructions}
 
 rules:
 {PROMPT_TEMPLATE}

@@ -11,7 +11,7 @@ namespace IngestionSettingsApi.Controllers
         public async Task<IActionResult> CreateIngestionSetting([FromBody] IngestionSettingCreateRequest request)
         {
             // Implementation here
-            return CreatedAtAction(nameof(GetIngestionSetting), new { id = "newId" }, new IngestionSettingResponse());
+            return CreatedAtAction(nameof(CreateIngestionSetting), new { id = "newId" }, new IngestionSettingResponse());
         }
 
         [HttpPut("{id}")]
@@ -27,7 +27,5 @@ namespace IngestionSettingsApi.Controllers
             // Implementation here
             return NoContent();
         }
-
-        // Additional methods for getting ingestion settings would go here
     }
 }
