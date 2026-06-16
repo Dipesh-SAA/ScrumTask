@@ -8,13 +8,13 @@ from app.Prompts.get_prompt_template_test_case import TEST_CASE_GENERATOR_PROMPT
 from app.Prompts.get_prompt_template_specification import SPECIFICATION_GENERATOR_PROMPT
 from app.Prompts.get_prompt_template_task import TASK_GENERATOR_PROMPT
 from app.Schema.State import InputState
-
+from app.Infrastrature.embeddings.embedding_model import (generate_embedding, get_constitution_chunks, rank_chunks)
 from app.Prompts.get_prompt_template_user_story import (
     USER_STORY_GENERATOR_PROMPT
 )
 
 BASE_DIR = Path(__file__).resolve().parents[3]
-CONSTITUTION_PATH = BASE_DIR / "AI  Agent Global Consitution (1).docx"
+# CONSTITUTION_PATH = BASE_DIR / "AI  Agent Global Consitution (1).docx"
 OUTPUT_DIR = BASE_DIR / "generated_md"
 
 
@@ -49,17 +49,48 @@ def read_context_file(path: Path) -> str:
 
 
 async def chat_constitution_llm(state: InputState):
-    retrieved_context = read_context_file(CONSTITUTION_PATH)
+    # Create embedding for user query
+    user_vector = generate_embedding(state["user_input"])
+
+    # Fetch chunks from Qdrant API
+    chunks = get_constitution_chunks()
+
+    # Retrieve top relevant chunks
+    top_chunks = rank_chunks(
+        user_vector=user_vector,
+        chunks=chunks,
+        top_k=5,
+    )
+
+    # Build context for prompt
+    retrieved_context = "\n\n".join(
+        [
+            f"Heading: {chunk['heading']}\n\n{chunk['text']}"
+            for chunk in top_chunks
+        ]
+    )
+
+    # Debug (optional)
+    # print("\nRetrieved Chunks:")
+    for chunk in top_chunks:
+        print(
+            f"Score={chunk['score']:.4f} | Heading={chunk['heading']}"
+        )
+
     formatted_messages = CONSTITUTION_GENERATOR_PROMPT.invoke(
         {
             "user_input": state["user_input"],
             "retrieved_context": retrieved_context,
         }
     )
-    response = await llm.ainvoke(formatted_messages)
-    save_markdown("constitution.md", response.content)
-    return {"constitution": response.content}
 
+    response = await llm.ainvoke(formatted_messages)
+
+    save_markdown("constitution.md", response.content)
+
+    return {
+        "constitution": response.content
+    }
 
 async def chat_specification_llm(state: InputState):
     formatted_messages = SPECIFICATION_GENERATOR_PROMPT.invoke(
@@ -160,3 +191,20 @@ async def chat_test_case_llm(user_story: str, task: str):
     return {
         "test_case": response.content
     }
+
+
+
+
+# import asyncio
+
+# async def test():
+#     state = {
+#         "user_input": "What are the core modules required for building an AI-native enterprise platform?"
+#     }
+
+#     result = await chat_constitution_llm(state)
+
+#     print("\nRESULT:")
+#     print(result["constitution"][:1000])
+
+# asyncio.run(test())

@@ -68,23 +68,23 @@ def rank_chunks(user_vector, chunks, top_k=5):
     return sorted(ranked, key=lambda x: x["score"], reverse=True)[:top_k]
 
 
-# if __name__ == "__main__":
-#     user_input = "What are the core modules required for building an AI-native enterprise platform?"
+if __name__ == "__main__":
+    user_input = "What are the core modules required for building an AI-native enterprise platform?"
 
-#     user_vector = generate_embedding(user_input)
-#     chunks = get_constitution_chunks()
+    user_vector = generate_embedding(user_input)
+    chunks = get_constitution_chunks()
 
-#     print("Embedding model:", MODEL_NAME)
-#     print("User vector length:", len(user_vector))
-#     print("Total chunks:", len(chunks))
-#     print("First constitution vector length:", len(chunks[0]["vectors"]))
+    print("Embedding model:", MODEL_NAME)
+    print("User vector length:", len(user_vector))
+    print("Total chunks:", len(chunks))
+    print("First constitution vector length:", len(chunks[0]["vectors"]))
 
-#     top_chunks = rank_chunks(user_vector, chunks, top_k=5)
+    top_chunks = rank_chunks(user_vector, chunks, top_k=5)
 
-#     print("\nTop matching chunks:")
+    print("\nTop matching chunks:")
 
-#     for index, chunk in enumerate(top_chunks, start=1):
-#         print(f"\nRank {index}")
-#         print("Score:", chunk["score"])
-#         print("Heading:", chunk["heading"])
-#         print("Text:", chunk["text"][:300])
+    for index, chunk in enumerate(top_chunks, start=1):
+        print(f"\nRank {index}")
+        print("Score:", chunk["score"])
+        print("Heading:", chunk["heading"])
+        print("Text:", chunk["text"][:300])
