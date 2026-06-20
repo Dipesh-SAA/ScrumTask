@@ -1,66 +1,102 @@
 openapi: 3.0.3
 info:
-  title: Create Calculator API
+  title: Create Ingestion Settings API
   version: 1.0.0
 servers:
-- url: http://api.example.com/v1
+- url: http://localhost:8000
 paths:
-  /calculator:
+  /ingestion-settings:
     post:
-      summary: Perform calculation
-      operationId: performCalculation
+      summary: Create Ingestion Setting
+      operationId: createIngestionSetting
       tags:
-      - calculator
+      - IngestionSettings
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                operation:
-                  type: string
-                  enum:
-                  - add
-                  - subtract
-                  - multiply
-                  - divide
-                operands:
-                  type: array
-                  items:
-                    type: number
-              required:
-              - operation
-              - operands
+              $ref: '#/components/schemas/IngestionSettingCreateRequest'
+      responses:
+        '201':
+          description: Ingestion Setting created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionSettingResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Update Ingestion Setting
+      operationId: updateIngestionSetting
+      tags:
+      - IngestionSettings
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestionSettingUpdateRequest'
       responses:
         '200':
-          description: Successful calculation
+          description: Ingestion Setting updated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    type: number
+                $ref: '#/components/schemas/IngestionSettingResponse'
         '400':
-          description: Invalid input
+          description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ingestion Setting not found
+        '401':
+          description: Unauthorized
         '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-components:
-  schemas:
-    ErrorResponse:
-      type: object
-      properties:
-        message:
+          description: Internal Server Error
+    delete:
+      summary: Delete Ingestion Setting
+      operationId: deleteIngestionSetting
+      tags:
+      - IngestionSettings
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
           type: string
-        code:
-          type: integer
+      responses:
+        '204':
+          description: Ingestion Setting deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Ingestion Setting not found
+        '500':
+          description: Internal Server Error
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+- bearerAuth: []
 x-backend: python
+x-database: mongodb

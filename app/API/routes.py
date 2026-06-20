@@ -13,12 +13,12 @@ from datetime import datetime, timezone
 
 from app.graph.workflow import create_graph
 from app.graph.nodes.node import chat_test_case_llm
-from app.utils.logger import logger
-
+from app.utils.logger import AgentLogger
+logger=AgentLogger()
 router = APIRouter()
 graph_app = create_graph()
 
-LOGGER_API = "https://vibeappop.saa.ai/EnterpriseLogging/api/Logs"
+# LOGGER_API = "https://vibeappop.saa.ai/EnterpriseLogging/api/Logs"
 BASE_DIR = Path(__file__).resolve().parents[2]
 GENERATED_MD_DIR = BASE_DIR / "generated_md"
 
@@ -312,90 +312,259 @@ def build_strict_response(user_story_text, task_text):
 def safe_logger(**kwargs):
 
     try:
-        return logger(**kwargs)
+        return logger.log_event(**kwargs)
     except Exception as exc:
         print(f"\nLogger API failed: {exc}")
         return None
 
 
+# class ChatRequest(BaseModel):
+#     user_input: str
+
+# @router.post("/ask")
+# async def ask_question(data: ChatRequest):
+
+#     start_time = time.time()
+
+
+#     session_id = str(uuid4())
+#     correlation_id = str(uuid4())
+#     request_id = str(uuid4())
+#     log_id = str(uuid4())
+#     graph_thread_id = f"user-session-{uuid4()}"
+    
+
+#     try:
+#         safe_logger(
+#             api_url=LOGGER_API,
+
+#             logId=log_id,
+
+#             timestampUtc=datetime.now(
+#                 timezone.utc
+#             ).isoformat(),
+
+#             logLevel=2,
+
+#             message="User request received",
+
+#             eventType="UserPromptReceived",
+
+#             sourceApplication="User_Story_gen",
+
+#             sourceModule="API.Routes",
+
+#             environment="Development",
+
+#             userId="",
+
+#             sessionId=session_id,
+
+#             correlationId=correlation_id,
+
+#             requestId=request_id,
+
+#             machineName=socket.gethostname(),
+
+#             threadId=str(threading.get_ident()),
+
+#             exceptionMessage=None,
+
+#             stackTrace=None,
+
+#             metadata={
+#                 "workflow": "spec-kit",
+#                 "endpoint": "/ask"
+#             },
+
+#             durationMs=int((time.time() - start_time) * 1000),
+
+#             isSuccess=True,
+
+#             payloadJson=json.dumps({
+#                 "user_input": data.user_input
+#             })
+#         )
+
+#         # Initial graph state
+#         initial_state = {
+#             "user_input": data.user_input,
+#             "retrieved_context": "",
+#             "constitution": "",
+#             "specification":"" ,
+#             # "planning": "",
+#             "task": "",
+#             "user_story": "",
+#             # "test_case": "",
+#         }
+
+#         config = {
+#             "configurable": {
+#                 "thread_id": graph_thread_id
+#             }
+#         }
+
+#         # Run workflow graph
+#         result = await graph_app.ainvoke(
+#             initial_state,
+#             config=config
+#         )
+
+#         duration_ms = int(
+#             (time.time() - start_time) * 1000
+#         )
+
+#         safe_logger(
+#             api_url=LOGGER_API,
+
+#             logId=log_id,
+
+#             timestampUtc=datetime.now(
+#                 timezone.utc
+#             ).isoformat(),
+
+#             logLevel=2,
+
+#             message="Workflow completed successfully",
+
+#             eventType="WorkflowCompleted",
+
+#             sourceApplication="Spec-Kit-AI",
+
+#             sourceModule="API.Routes",
+
+#             environment="Development",
+
+#             userId="",
+
+#             sessionId=session_id,
+
+#             correlationId=correlation_id,
+
+#             requestId=request_id,
+
+#             machineName=socket.gethostname(),
+
+#             threadId=str(threading.get_ident()),
+
+#             exceptionMessage=None,
+
+#             stackTrace=None,
+
+#             metadata={
+#                 "durationMs": duration_ms,
+#                 "endpoint": "/ask"
+#             },
+
+#             durationMs=duration_ms,
+
+#             isSuccess=True,
+
+#             payloadJson=json.dumps(result)
+#         )
+
+#         # Return JSON response
+#         return {
+#             "success": True,
+#             "user_stories": build_strict_response(
+#                 result.get("user_story", ""),
+#                 result.get("task", "")
+#             ),
+#         }
+
+#     except Exception as e:
+#         duration_ms = int(
+#             (time.time() - start_time) * 1000
+#         )
+
+#         safe_logger(
+#             api_url=LOGGER_API,
+
+#             logId=log_id,
+
+#             timestampUtc=datetime.now(
+#                 timezone.utc
+#             ).isoformat(),
+
+#             logLevel=4,
+
+#             message="Workflow execution failed",
+
+#             eventType="WorkflowError",
+
+#             sourceApplication="Spec-Kit-AI",
+
+#             sourceModule="API.Routes",
+
+#             environment="Development",
+
+#             userId="",
+
+#             sessionId=session_id,
+
+#             correlationId=correlation_id,
+
+#             requestId=request_id,
+
+#             machineName=socket.gethostname(),
+
+#             threadId=str(threading.get_ident()),
+
+#             exceptionMessage=str(e),
+
+#             stackTrace=traceback.format_exc(),
+
+#             metadata={
+#                 "durationMs": duration_ms,
+#                 "endpoint": "/ask"
+#             },
+
+#             durationMs=duration_ms,
+
+#             isSuccess=False,
+
+#             payloadJson=json.dumps({
+#                 "user_input": data.user_input
+#             })
+#         )
+
+#         return {
+#             "success": False,
+#             "error": str(e)
+#         }
 class ChatRequest(BaseModel):
     user_input: str
+
 
 @router.post("/ask")
 async def ask_question(data: ChatRequest):
 
     start_time = time.time()
-
-
-    session_id = str(uuid4())
     correlation_id = str(uuid4())
-    request_id = str(uuid4())
-    log_id = str(uuid4())
     graph_thread_id = f"user-session-{uuid4()}"
-    
 
     try:
+
         safe_logger(
-            api_url=LOGGER_API,
-
-            logId=log_id,
-
-            timestampUtc=datetime.now(
-                timezone.utc
-            ).isoformat(),
-
-            logLevel=2,
-
+            agent_name="UserStoryAgent",
             message="User request received",
-
-            eventType="UserPromptReceived",
-
-            sourceApplication="User_Story_gen",
-
-            sourceModule="API.Routes",
-
-            environment="Development",
-
-            userId="",
-
-            sessionId=session_id,
-
-            correlationId=correlation_id,
-
-            requestId=request_id,
-
-            machineName=socket.gethostname(),
-
-            threadId=str(threading.get_ident()),
-
-            exceptionMessage=None,
-
-            stackTrace=None,
-
-            metadata={
-                "workflow": "spec-kit",
-                "endpoint": "/ask"
+            event_type="UserPromptReceived",
+            source_module="API.Routes",
+            is_success=True,
+            correlation_id=correlation_id,
+            payload={
+                "endpoint": "/ask",
+                "user_input": data.user_input,
             },
-
-            durationMs=int((time.time() - start_time) * 1000),
-
-            isSuccess=True,
-
-            payloadJson=json.dumps({
-                "user_input": data.user_input
-            })
         )
 
-        # Initial graph state
         initial_state = {
             "user_input": data.user_input,
             "retrieved_context": "",
             "constitution": "",
-            "specification":"" ,
-            # "planning": "",
+            "specification": "",
             "task": "",
             "user_story": "",
-            # "test_case": "",
         }
 
         config = {
@@ -404,128 +573,72 @@ async def ask_question(data: ChatRequest):
             }
         }
 
-        # Run workflow graph
         result = await graph_app.ainvoke(
             initial_state,
             config=config
         )
 
+        if result is None:
+            raise Exception("Workflow returned None")
+
+        if not isinstance(result, dict):
+            raise Exception(
+                f"Invalid workflow response type: {type(result)}"
+            )
+
+        user_stories = build_strict_response(
+            result.get("user_story", ""),
+            result.get("task", "")
+        )
+
+        if not user_stories:
+            raise Exception(
+                "Failed to generate valid user stories"
+            )
+
         duration_ms = int(
             (time.time() - start_time) * 1000
         )
 
         safe_logger(
-            api_url=LOGGER_API,
-
-            logId=log_id,
-
-            timestampUtc=datetime.now(
-                timezone.utc
-            ).isoformat(),
-
-            logLevel=2,
-
+            agent_name="UserStoryAgent",
             message="Workflow completed successfully",
-
-            eventType="WorkflowCompleted",
-
-            sourceApplication="Spec-Kit-AI",
-
-            sourceModule="API.Routes",
-
-            environment="Development",
-
-            userId="",
-
-            sessionId=session_id,
-
-            correlationId=correlation_id,
-
-            requestId=request_id,
-
-            machineName=socket.gethostname(),
-
-            threadId=str(threading.get_ident()),
-
-            exceptionMessage=None,
-
-            stackTrace=None,
-
-            metadata={
-                "durationMs": duration_ms,
-                "endpoint": "/ask"
+            event_type="WorkflowCompleted",
+            source_module="API.Routes",
+            is_success=True,
+            duration_ms=duration_ms,
+            correlation_id=correlation_id,
+            payload={
+                "endpoint": "/ask",
+                "user_story_count": len(user_stories),
             },
-
-            durationMs=duration_ms,
-
-            isSuccess=True,
-
-            payloadJson=json.dumps(result)
         )
 
-        # Return JSON response
         return {
             "success": True,
-            "user_stories": build_strict_response(
-                result.get("user_story", ""),
-                result.get("task", "")
-            ),
+            "user_stories": user_stories,
         }
 
     except Exception as e:
+
         duration_ms = int(
             (time.time() - start_time) * 1000
         )
 
         safe_logger(
-            api_url=LOGGER_API,
-
-            logId=log_id,
-
-            timestampUtc=datetime.now(
-                timezone.utc
-            ).isoformat(),
-
-            logLevel=4,
-
-            message="Workflow execution failed",
-
-            eventType="WorkflowError",
-
-            sourceApplication="Spec-Kit-AI",
-
-            sourceModule="API.Routes",
-
-            environment="Development",
-
-            userId="",
-
-            sessionId=session_id,
-
-            correlationId=correlation_id,
-
-            requestId=request_id,
-
-            machineName=socket.gethostname(),
-
-            threadId=str(threading.get_ident()),
-
-            exceptionMessage=str(e),
-
-            stackTrace=traceback.format_exc(),
-
-            metadata={
-                "durationMs": duration_ms,
-                "endpoint": "/ask"
+            agent_name="UserStoryAgent",
+            message=f"Workflow execution failed: {str(e)}",
+            event_type="WorkflowError",
+            source_module="API.Routes",
+            is_success=False,
+            duration_ms=duration_ms,
+            correlation_id=correlation_id,
+            payload={
+                "endpoint": "/ask",
+                "user_input": data.user_input,
+                "error": str(e),
+                "stack_trace": traceback.format_exc(),
             },
-
-            durationMs=duration_ms,
-
-            isSuccess=False,
-
-            payloadJson=json.dumps({
-                "user_input": data.user_input
-            })
         )
 
         return {
@@ -535,33 +648,156 @@ async def ask_question(data: ChatRequest):
 
 
 
+# # ###Test case endpoint
+# # class TestCaseRequest(BaseModel):
+# #     constitution: str = ""
+# #     user_story: str
+# #     task: str
 
 
-# ###Test case endpoint
-# class TestCaseRequest(BaseModel):
-#     constitution: str = ""
-#     user_story: str
-#     task: str
+# # @router.post("/test")
+# # async def generate_test_case(request: TestCaseRequest):
+
+# #     result = await chat_test_case_llm(
+# #         user_story=request.user_story,
+# #         task=request.task,
+# #     )
+
+# #     try:
+# #         return {
+# #             "success": True,
+# #             "constitution": request.constitution,
+# #             "test_case": json.loads(result.get("test_case", "{}")),
+# #         }
+
+# #     except json.JSONDecodeError:
+# #         return {
+# #             "success": False,
+# #             "error": "Generated test case response is not valid JSON.",
+# #             "test_case": result.get("test_case", ""),
+# #         }
+
+class TestCaseRequest(BaseModel):
+    user_story: str
+    task: str
 
 
 # @router.post("/test")
 # async def generate_test_case(request: TestCaseRequest):
 
-#     result = await chat_test_case_llm(
-#         user_story=request.user_story,
-#         task=request.task,
-#     )
+#     start_time = time.time()
+#     correlation_id = str(uuid4())
 
 #     try:
+
+#         safe_logger(
+#             agent_name="TestCaseAgent",
+#             message="Test case generation request received",
+#             event_type="TestCaseGenerationStarted",
+#             source_module="API.Routes",
+#             is_success=True,
+#             correlation_id=correlation_id,
+#             payload={
+#                 "endpoint": "/test",
+#             },
+#         )
+
+#         result = await chat_test_case_llm(
+#             user_story=request.user_story,
+#             task=request.task,
+#         )
+
+#         if result is None:
+#             raise Exception("LLM returned None")
+
+#         if not isinstance(result, dict):
+#             raise Exception(
+#                 f"Invalid response type: {type(result)}"
+#             )
+
+#         test_case_text = result.get("test_case")
+
+#         if not test_case_text:
+#             raise Exception(
+#                 "No test_case found in response"
+#             )
+
+#         try:
+#             parsed_test_case = json.loads(
+#                 test_case_text
+#             )
+
+#         except json.JSONDecodeError:
+
+#             duration_ms = int(
+#                 (time.time() - start_time) * 1000
+#             )
+
+#             safe_logger(
+#                 agent_name="TestCaseAgent",
+#                 message="Generated test case is not valid JSON",
+#                 event_type="JsonParsingError",
+#                 source_module="API.Routes",
+#                 is_success=False,
+#                 duration_ms=duration_ms,
+#                 correlation_id=correlation_id,
+#                 payload={
+#                     "endpoint": "/test",
+#                     "response_preview": test_case_text[:1000],
+#                 },
+#             )
+
+#             return {
+#                 "success": False,
+#                 "error": "Generated test case response is not valid JSON.",
+#                 "test_case": test_case_text,
+#             }
+
+#         duration_ms = int(
+#             (time.time() - start_time) * 1000
+#         )
+
+#         safe_logger(
+#             agent_name="TestCaseAgent",
+#             message="Test case generated successfully",
+#             event_type="TestCaseGenerationCompleted",
+#             source_module="API.Routes",
+#             is_success=True,
+#             duration_ms=duration_ms,
+#             correlation_id=correlation_id,
+#             payload={
+#                 "endpoint": "/test",
+#                 "response_size": len(test_case_text),
+#             },
+#         )
+
 #         return {
 #             "success": True,
-#             "constitution": request.constitution,
-#             "test_case": json.loads(result.get("test_case", "{}")),
+#             "test_case": parsed_test_case,
 #         }
 
-#     except json.JSONDecodeError:
+#     except Exception as e:
+
+#         duration_ms = int(
+#             (time.time() - start_time) * 1000
+#         )
+
+#         safe_logger(
+#             agent_name="TestCaseAgent",
+#             message=f"Test case generation failed: {str(e)}",
+#             event_type="TestCaseGenerationError",
+#             source_module="API.Routes",
+#             is_success=False,
+#             duration_ms=duration_ms,
+#             correlation_id=correlation_id,
+#             payload={
+#                 "endpoint": "/test",
+#                 "error": str(e),
+#                 "stack_trace": traceback.format_exc(),
+#             },
+#         )
+
 #         return {
 #             "success": False,
-#             "error": "Generated test case response is not valid JSON.",
-#             "test_case": result.get("test_case", ""),
+#             "error": str(e)
 #         }
