@@ -9,11 +9,17 @@ import threading
 import time
 import traceback
 
+import time
+import traceback
+from uuid import uuid4
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from datetime import datetime, timezone
 
 from app.graph.workflow import create_graph
-from app.graph.nodes.node import chat_test_case_llm
+from app.graph.nodes.node import improve_user_story_llm
 from app.utils.logger import AgentLogger
+
 logger=AgentLogger()
 router = APIRouter()
 graph_app = create_graph()
@@ -677,127 +683,79 @@ async def ask_question(data: ChatRequest):
 # #             "test_case": result.get("test_case", ""),
 # #         }
 
-class TestCaseRequest(BaseModel):
+
+
+
+
+
+
+class ImproveUserStoryRequestBody(BaseModel):
     user_story: str
-    task: str
+    instruction: str
 
 
-# @router.post("/test")
-# async def generate_test_case(request: TestCaseRequest):
+@router.post("/improve_user_story")
+async def improve_user_story_api(request: ImproveUserStoryRequestBody):
+    start_time = time.time()
+    correlation_id = str(uuid4())
 
-#     start_time = time.time()
-#     correlation_id = str(uuid4())
+    try:
+        safe_logger(
+            agent_name="ImproveUserStoryAgent",
+            message="Improve user story request received",
+            event_type="ImproveUserStoryStarted",
+            source_module="ImproveUserStory.api.routes",
+            is_success=True,
+            correlation_id=correlation_id,
+            payload={
+                "endpoint": "/improve_user_story",
+                "user_story_length": len(request.user_story or ""),
+                "instruction_length": len(request.instruction or ""),
+            },
+        )
 
-#     try:
+        response = await improve_user_story_llm(
+            user_story=request.user_story,
+            instruction=request.instruction,
+        )
 
-#         safe_logger(
-#             agent_name="TestCaseAgent",
-#             message="Test case generation request received",
-#             event_type="TestCaseGenerationStarted",
-#             source_module="API.Routes",
-#             is_success=True,
-#             correlation_id=correlation_id,
-#             payload={
-#                 "endpoint": "/test",
-#             },
-#         )
+        duration_ms = int((time.time() - start_time) * 1000)
 
-#         result = await chat_test_case_llm(
-#             user_story=request.user_story,
-#             task=request.task,
-#         )
+        safe_logger(
+            agent_name="ImproveUserStoryAgent",
+            message="User story improvement completed successfully",
+            event_type="ImproveUserStoryCompleted",
+            source_module="ImproveUserStory.api.routes",
+            is_success=True,
+            duration_ms=duration_ms,
+            correlation_id=correlation_id,
+            payload={
+                "endpoint": "/improve_user_story",
+                "response_keys": list(response.keys()) if isinstance(response, dict) else [],
+            },
+        )
 
-#         if result is None:
-#             raise Exception("LLM returned None")
+        return response
 
-#         if not isinstance(result, dict):
-#             raise Exception(
-#                 f"Invalid response type: {type(result)}"
-#             )
+    except Exception as exc:
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        safe_logger(
+            agent_name="ImproveUserStoryAgent",
+            message=f"User story improvement failed: {str(exc)}",
+            event_type="ImproveUserStoryError",
+            source_module="ImproveUserStory.api.routes",
+            is_success=False,
+            duration_ms=duration_ms,
+            correlation_id=correlation_id,
+            payload={
+                "endpoint": "/improve_user_story",
+                "error": str(exc),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
 
-#         test_case_text = result.get("test_case")
-
-#         if not test_case_text:
-#             raise Exception(
-#                 "No test_case found in response"
-#             )
-
-#         try:
-#             parsed_test_case = json.loads(
-#                 test_case_text
-#             )
-
-#         except json.JSONDecodeError:
-
-#             duration_ms = int(
-#                 (time.time() - start_time) * 1000
-#             )
-
-#             safe_logger(
-#                 agent_name="TestCaseAgent",
-#                 message="Generated test case is not valid JSON",
-#                 event_type="JsonParsingError",
-#                 source_module="API.Routes",
-#                 is_success=False,
-#                 duration_ms=duration_ms,
-#                 correlation_id=correlation_id,
-#                 payload={
-#                     "endpoint": "/test",
-#                     "response_preview": test_case_text[:1000],
-#                 },
-#             )
-
-#             return {
-#                 "success": False,
-#                 "error": "Generated test case response is not valid JSON.",
-#                 "test_case": test_case_text,
-#             }
-
-#         duration_ms = int(
-#             (time.time() - start_time) * 1000
-#         )
-
-#         safe_logger(
-#             agent_name="TestCaseAgent",
-#             message="Test case generated successfully",
-#             event_type="TestCaseGenerationCompleted",
-#             source_module="API.Routes",
-#             is_success=True,
-#             duration_ms=duration_ms,
-#             correlation_id=correlation_id,
-#             payload={
-#                 "endpoint": "/test",
-#                 "response_size": len(test_case_text),
-#             },
-#         )
-
-#         return {
-#             "success": True,
-#             "test_case": parsed_test_case,
-#         }
-
-#     except Exception as e:
-
-#         duration_ms = int(
-#             (time.time() - start_time) * 1000
-#         )
-
-#         safe_logger(
-#             agent_name="TestCaseAgent",
-#             message=f"Test case generation failed: {str(e)}",
-#             event_type="TestCaseGenerationError",
-#             source_module="API.Routes",
-#             is_success=False,
-#             duration_ms=duration_ms,
-#             correlation_id=correlation_id,
-#             payload={
-#                 "endpoint": "/test",
-#                 "error": str(e),
-#                 "stack_trace": traceback.format_exc(),
-#             },
-#         )
-
-#         return {
-#             "success": False,
-#             "error": str(e)
-#         }
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while improving the user story."
+        ) from exc

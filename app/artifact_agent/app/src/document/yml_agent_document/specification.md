@@ -11,7 +11,7 @@ taskName: Create Ingestion Settings API
 description: Create API to insert, update and delete data from ingestion settings table
 businessContext: Healthcare data platform
 technology:
-  backend: .net core
+  backend: .net core or sql or react or angular
   database: mongodb
 operations:
   - create
@@ -100,7 +100,7 @@ If `businessContext` includes healthcare, platform, admin, secure, protected or 
 ## Technology Vendor Extensions
 When supplied, include:
 ```yaml
-x-backend: ".net core"
+x-backend: "<requested backend>"
 x-database: "mongodb"
 ```
 These are valid OpenAPI extensions and can be ignored safely by OpenAPI Generator.

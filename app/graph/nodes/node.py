@@ -1,10 +1,11 @@
 from pathlib import Path
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
-
+import json
+import re
 from app.Infrastrature.llm.loader import llm
 from app.Prompts.get_prompt_template_constitution import CONSTITUTION_GENERATOR_PROMPT
-from app.Prompts.get_prompt_template_test_case import TEST_CASE_GENERATOR_PROMPT
+from app.Prompts.get_improve_user_story import IMPROVE_USER_STORY_PROMPT
 from app.Prompts.get_prompt_template_specification import SPECIFICATION_GENERATOR_PROMPT
 from app.Prompts.get_prompt_template_task import TASK_GENERATOR_PROMPT
 from app.Schema.State import InputState
@@ -21,6 +22,25 @@ OUTPUT_DIR = BASE_DIR / "generated_md"
 def save_markdown(filename: str, content: str) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.joinpath(filename).write_text(content.strip(), encoding="utf-8")
+
+
+def parse_llm_json_response(text: str):
+    text = str(text).strip()
+    text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*```$", "", text)
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start != -1 and end != -1 and end > start:
+        return json.loads(text[start:end + 1])
+
+    raise ValueError("LLM response was not valid JSON")
 
 
 def read_context_file(path: Path) -> str:
@@ -176,20 +196,22 @@ async def chat_task_llm(state: InputState):
 
 
 #test case generation is the final step, it will take the constitution, user story and task to generate test cases. It will follow strict traceability rules to ensure that every test case is directly traceable to a User Story or Acceptance Criterion. It will not invent any values unless explicitly stated in the User Story. The generated test cases will be saved in a markdown file for further use.
-async def chat_test_case_llm(user_story: str, task: str):
-    formatted_messages = TEST_CASE_GENERATOR_PROMPT.invoke(
+
+
+async def improve_user_story_llm(user_story: str, instruction: str):
+    formatted_messages = IMPROVE_USER_STORY_PROMPT.invoke(
         {
             "user_story": user_story,
-            "task": task,
+            "instruction": instruction,
         }
     )
 
     response = await llm.ainvoke(formatted_messages)
 
-    save_markdown("test_case.md", response.content)
+    save_markdown("improve_user_story.md", response.content)
 
     return {
-        "test_case": response.content
+        "improve_user_story": parse_llm_json_response(response.content)
     }
 
 
