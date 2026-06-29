@@ -696,6 +696,7 @@ class ImproveSubTaskRequestBody(BaseModel):
     subtask_id: str
     user_story: str
     subtask: str
+    instruction: str = ""
 
 
 @router.post("/improve_sub_task")
@@ -718,6 +719,7 @@ async def improve_sub_task_api(request: ImproveSubTaskRequestBody):
                 "subtask_id": request.subtask_id,
                 "user_story_length": len(request.user_story or ""),
                 "subtask_length": len(request.subtask or ""),
+                "instruction_length": len(request.instruction or ""),
             },
         )
 
@@ -726,6 +728,7 @@ async def improve_sub_task_api(request: ImproveSubTaskRequestBody):
             subtask_id=request.subtask_id,
             user_story=request.user_story,
             subtask=request.subtask,
+            instruction=request.instruction,
         )
 
         duration_ms = int((time.time() - start_time) * 1000)
