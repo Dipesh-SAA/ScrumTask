@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from app.artifact_agent.app.src.agents.yml_agent import yml_code_gen
 from app.artifact_agent.app.src.agents.openapi_gen import openapi_code_gen
 from app.utils.logger import AgentLogger
-
+from pydantic import BaseModel, Field, ConfigDict
 
 router = APIRouter(tags=["code_generator"])
 logger = AgentLogger()
@@ -23,11 +23,13 @@ YML_FILE = YML_DIR / "openapi.yml"
 
 UPLOAD_DIR = BASE_DIR / "uploads"
 
-
 class CodeGenRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     task: str
     techstack: str
-    instructions: str | None = None
+    UserStoryTaskId: str = Field(alias="SubTaskId")
+    instructions: str | None = Field(default=None, alias="Instructions")
 
 
 def safe_logger(**kwargs):
@@ -55,6 +57,7 @@ async def generate_full_api(request: CodeGenRequest):
                 "endpoint": "/generate-full-api",
                 "task": request.task,
                 "techstack": request.techstack,
+                "UserStoryTaskId": request.UserStoryTaskId,
                 "has_instructions": bool(request.instructions),
             },
         )
@@ -62,6 +65,7 @@ async def generate_full_api(request: CodeGenRequest):
         yml_response = await yml_code_gen(
             task=request.task,
             techstack=request.techstack,
+            user_story_task_id=request.UserStoryTaskId,
             instructions=request.instructions
         )
 
@@ -76,6 +80,7 @@ async def generate_full_api(request: CodeGenRequest):
             payload={
                 "endpoint": "/generate-full-api",
                 "yaml_file": str(YML_FILE),
+                "UserStoryTaskId": request.UserStoryTaskId,
                 "yaml_keys": list(yml_response.keys()) if isinstance(yml_response, dict) else [],
             },
         )
@@ -85,7 +90,9 @@ async def generate_full_api(request: CodeGenRequest):
                 f"Agent 1 did not create YAML file at: {YML_FILE}"
             )
 
-        generated_code = await openapi_code_gen()
+        generated_code = await openapi_code_gen(
+            user_story_task_id=request.UserStoryTaskId
+        )
 
         duration_ms = int((time.time() - start_time) * 1000)
 
@@ -100,6 +107,7 @@ async def generate_full_api(request: CodeGenRequest):
             payload={
                 "endpoint": "/generate-full-api",
                 "yaml_file": generated_code.get("yaml_file"),
+                "UserStoryTaskId": request.UserStoryTaskId,
                 "generated_dir": generated_code.get("generated_dir"),
                 "generated_file_count": len(generated_code.get("saved_files") or []),
                 "zip_file": generated_code.get("zip_file"),
@@ -111,6 +119,7 @@ async def generate_full_api(request: CodeGenRequest):
         return {
             "status": "success",
             "message": "Agent 1 generated YAML, then Agent 2 generated source code from that YAML.",
+            "UserStoryTaskId": request.UserStoryTaskId,
             "yaml_used_by_agent_2": generated_code.get("yaml_file"),
             "code_saved_at": generated_code.get("generated_dir"),
             "generated_files": generated_code.get("saved_files"),
@@ -134,6 +143,7 @@ async def generate_full_api(request: CodeGenRequest):
                 "endpoint": "/generate-full-api",
                 "task": request.task,
                 "techstack": request.techstack,
+                "UserStoryTaskId": request.UserStoryTaskId,
                 "error": str(exc),
                 "stack_trace": traceback.format_exc(),
             },
@@ -143,3 +153,4 @@ async def generate_full_api(request: CodeGenRequest):
             status_code=500,
             detail=str(exc)
         ) from exc
+

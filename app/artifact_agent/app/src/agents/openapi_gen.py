@@ -3,9 +3,9 @@ import re
 import shutil
 from pathlib import Path
 import yaml
-from app.artifact_agent.app.src.llm.loader import llm
+from app.Infrastrature.llm.loader import llm
 import subprocess
-
+from app.utils.wrapper import log_agent
 # BASE_DIR = Path(__file__).resolve().parents[1]
 # YML_FILE = BASE_DIR / "document/yml" / "openapi.yml"
 # # OUTPUT_ROOT = BASE_DIR / "generated_outputs"
@@ -488,7 +488,7 @@ import re
 import shutil
 from pathlib import Path
 import yaml
-from app.artifact_agent.app.src.llm.loader import llm
+from app.Infrastrature.llm.loader import llm
 import subprocess
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -921,80 +921,213 @@ def validate_react_build(project_dir: str):
         "message": "React project build completed successfully"
     }
 
-async def openapi_code_gen():
-    yaml_content, yaml_data = read_yaml_file()
+# async def openapi_code_gen():
+#     yaml_content, yaml_data = read_yaml_file()
 
-    backend = get_backend(yaml_data)
+#     backend = get_backend(yaml_data)
 
-    constitution_content, specification_content = read_prompt_files_by_backend(
-        backend
+#     constitution_content, specification_content = read_prompt_files_by_backend(
+#         backend
+#     )
+
+#     prompt = build_code_generation_prompt(
+#         yaml_content=yaml_content,
+#         constitution_content=constitution_content,
+#         specification_content=specification_content,
+#         backend=backend
+#     )
+
+#     response = await llm.ainvoke(prompt)
+
+#     raw_text = getattr(response, "content", response)
+
+#     parsed = clean_json_response(raw_text)
+
+#     files = parsed.get("files")
+#     files = normalize_files(files)
+
+#     validate_generated_files(files, backend)
+
+#     generated_dir, saved_files, zip_file = save_generated_files(
+#         files,
+#         backend,
+#         yaml_data
+#     )
+
+#     build_validation = None
+
+#     if backend == ".net":
+#         build_validation = validate_dotnet_project(generated_dir)
+
+#         if not build_validation["build_success"]:
+#             return {
+#                 "status": "failed",
+#                 "message": "Code generated, but .NET build failed.",
+#                 "yaml_file": str(YML_FILE),
+#                 "backend": backend,
+#                 "generated_dir": str(generated_dir),
+#                 "files": files,
+#                 "saved_files": saved_files,
+#                 "zip_file": str(zip_file),
+#                 "build_validation": build_validation
+#             }
+
+#     elif backend == "react":
+#         build_validation = validate_react_build(str(generated_dir))
+
+#         if build_validation["status"] != "success":
+#             return {
+#                 "status": "failed",
+#                 "message": "Code generated, but React build failed.",
+#                 "yaml_file": str(YML_FILE),
+#                 "backend": backend,
+#                 "generated_dir": str(generated_dir),
+#                 "files": files,
+#                 "saved_files": saved_files,
+#                 "zip_file": str(zip_file),
+#                 "build_validation": build_validation
+#             }
+#     return {
+#         "status": "success",
+#         "message": "Code generated successfully from YAML using AI.",
+#         "yaml_file": str(YML_FILE),
+#         "backend": backend,
+#         "generated_dir": generated_dir,
+#         "files": files,
+#         "saved_files": saved_files,
+#         "zip_file": zip_file,
+#         "build_validation": build_validation
+#     }
+
+
+from app.utils.wrapper import log_agent
+
+
+async def openapi_code_gen(user_story_task_id: str):
+
+    await log_agent(
+        user_story_task_id=user_story_task_id,
+        stage="OpenAPI Code Generation",
+        message="OpenAPI Code Generation Started",
+        status="Running",
+        agent_name="OpenAPI Code Generation Agent",
     )
 
-    prompt = build_code_generation_prompt(
-        yaml_content=yaml_content,
-        constitution_content=constitution_content,
-        specification_content=specification_content,
-        backend=backend
-    )
+    try:
+        yaml_content, yaml_data = read_yaml_file()
 
-    response = await llm.ainvoke(prompt)
+        backend = get_backend(yaml_data)
 
-    raw_text = getattr(response, "content", response)
+        constitution_content, specification_content = read_prompt_files_by_backend(
+            backend
+        )
 
-    parsed = clean_json_response(raw_text)
+        prompt = build_code_generation_prompt(
+            yaml_content=yaml_content,
+            constitution_content=constitution_content,
+            specification_content=specification_content,
+            backend=backend
+        )
 
-    files = parsed.get("files")
-    files = normalize_files(files)
+        response = await llm.ainvoke(prompt)
 
-    validate_generated_files(files, backend)
+        raw_text = getattr(response, "content", response)
 
-    generated_dir, saved_files, zip_file = save_generated_files(
-        files,
-        backend,
-        yaml_data
-    )
+        parsed = clean_json_response(raw_text)
 
-    build_validation = None
+        files = parsed.get("files")
+        files = normalize_files(files)
 
-    if backend == ".net":
-        build_validation = validate_dotnet_project(generated_dir)
+        validate_generated_files(files, backend)
 
-        if not build_validation["build_success"]:
-            return {
-                "status": "failed",
-                "message": "Code generated, but .NET build failed.",
-                "yaml_file": str(YML_FILE),
-                "backend": backend,
-                "generated_dir": str(generated_dir),
-                "files": files,
-                "saved_files": saved_files,
-                "zip_file": str(zip_file),
-                "build_validation": build_validation
-            }
+        generated_dir, saved_files, zip_file = save_generated_files(
+            files,
+            backend,
+            yaml_data
+        )
 
-    elif backend == "react":
-        build_validation = validate_react_build(str(generated_dir))
+        build_validation = None
 
-        if build_validation["status"] != "success":
-            return {
-                "status": "failed",
-                "message": "Code generated, but React build failed.",
-                "yaml_file": str(YML_FILE),
-                "backend": backend,
-                "generated_dir": str(generated_dir),
-                "files": files,
-                "saved_files": saved_files,
-                "zip_file": str(zip_file),
-                "build_validation": build_validation
-            }
-    return {
-        "status": "success",
-        "message": "Code generated successfully from YAML using AI.",
-        "yaml_file": str(YML_FILE),
-        "backend": backend,
-        "generated_dir": generated_dir,
-        "files": files,
-        "saved_files": saved_files,
-        "zip_file": zip_file,
-        "build_validation": build_validation
-    }
+        if backend == ".net":
+
+            build_validation = validate_dotnet_project(generated_dir)
+
+            if not build_validation["build_success"]:
+
+                await log_agent(
+                    user_story_task_id=user_story_task_id,
+                    stage="OpenAPI Code Generation",
+                    message=".NET Build Failed",
+                    status="Failed",
+                    agent_name="OpenAPI Code Generation Agent",
+                )
+
+                return {
+                    "status": "failed",
+                    "message": "Code generated, but .NET build failed.",
+                    "yaml_file": str(YML_FILE),
+                    "backend": backend,
+                    "generated_dir": str(generated_dir),
+                    "files": files,
+                    "saved_files": saved_files,
+                    "zip_file": str(zip_file),
+                    "build_validation": build_validation
+                }
+
+        elif backend == "react":
+
+            build_validation = validate_react_build(str(generated_dir))
+
+            if build_validation["status"] != "success":
+
+                await log_agent(
+                    user_story_task_id=user_story_task_id,
+                    stage="OpenAPI Code Generation",
+                    message="React Build Failed",
+                    status="Failed",
+                    agent_name="OpenAPI Code Generation Agent",
+                )
+
+                return {
+                    "status": "failed",
+                    "message": "Code generated, but React build failed.",
+                    "yaml_file": str(YML_FILE),
+                    "backend": backend,
+                    "generated_dir": str(generated_dir),
+                    "files": files,
+                    "saved_files": saved_files,
+                    "zip_file": str(zip_file),
+                    "build_validation": build_validation
+                }
+
+        await log_agent(
+            user_story_task_id=user_story_task_id,
+            stage="OpenAPI Code Generation",
+            message="OpenAPI Code Generation Completed",
+            status="Completed",
+            agent_name="OpenAPI Code Generation Agent",
+        )
+
+        return {
+            "status": "success",
+            "message": "Code generated successfully from YAML using AI.",
+            "yaml_file": str(YML_FILE),
+            "backend": backend,
+            "generated_dir": generated_dir,
+            "files": files,
+            "saved_files": saved_files,
+            "zip_file": zip_file,
+            "build_validation": build_validation
+        }
+
+    except Exception as e:
+
+        await log_agent(
+            user_story_task_id=user_story_task_id,
+            stage="OpenAPI Code Generation",
+            message=str(e),
+            status="Failed",
+            agent_name="OpenAPI Code Generation Agent",
+        )
+
+        raise

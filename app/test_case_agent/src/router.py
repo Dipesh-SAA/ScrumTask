@@ -13,6 +13,7 @@ logger = AgentLogger()
 
 
 class requestbody(BaseModel):
+    UserStoryTaskId: str
     user_story: str
     task: str
 
@@ -40,12 +41,14 @@ async def testCase_api(request: requestbody):
             correlation_id=correlation_id,
             payload={
                 "endpoint": "/test_case",
+                "UserStoryTaskId": request.UserStoryTaskId,
                 "user_story_length": len(request.user_story or ""),
                 "task_length": len(request.task or ""),
             },
         )
 
         response = await test_case(
+            UserStoryTaskId=request.UserStoryTaskId,
             user_story=request.user_story,
             task=request.task,
         )
@@ -62,6 +65,7 @@ async def testCase_api(request: requestbody):
             correlation_id=correlation_id,
             payload={
                 "endpoint": "/test_case",
+                "UserStoryTaskId": request.UserStoryTaskId,
                 "response_keys": list(response.keys()) if isinstance(response, dict) else [],
             },
         )
@@ -82,6 +86,7 @@ async def testCase_api(request: requestbody):
             correlation_id=correlation_id,
             payload={
                 "endpoint": "/test_case",
+                "UserStoryTaskId": request.UserStoryTaskId,
                 "error": str(exc),
                 "stack_trace": traceback.format_exc(),
             },

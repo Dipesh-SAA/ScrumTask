@@ -1,72 +1,199 @@
 openapi: 3.0.3
 info:
-  title: Simple Calculator API
+  title: Calculation API
   version: 1.0.0
-  description: API for performing basic calculator operations
+  description: API for calculation operations
 servers:
-- url: https://api.example.com/v1
-  description: Production server
+- url: http://localhost:8000
+  description: Local development server
 paths:
   /calculations:
-    post:
+    get:
       tags:
-      - calculations
-      summary: Perform a calculation
-      operationId: createCalculation
+      - calculation
+      summary: List all calculations
+      operationId: listCalculations
+      responses:
+        '200':
+          description: Calculations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalculationResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /calculations/{id}:
+    put:
+      tags:
+      - calculation
+      summary: Update a calculation
+      operationId: updateCalculation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CalculationRequest'
+              $ref: '#/components/schemas/CalculationUpdateRequest'
       responses:
         '200':
-          description: Successful calculation
+          description: Calculation updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CalculationResponse'
         '400':
-          description: Invalid input
+          description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Calculation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - calculation
+      summary: Delete a calculation
+      operationId: deleteCalculation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Calculation deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Calculation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - calculation
+      summary: Get a calculation by ID
+      operationId: getCalculation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Calculation retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculationResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Calculation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    CalculationRequest:
+    CalculationCreateRequest:
       type: object
       properties:
-        operand1:
-          type: number
-        operand2:
-          type: number
-        operation:
+        name:
           type: string
-          enum:
-          - add
-          - subtract
-          - multiply
-          - divide
-      required:
-      - operand1
-      - operand2
-      - operation
+        description:
+          type: string
+        formula:
+          type: string
+        isActive:
+          type: boolean
+    CalculationUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        formula:
+          type: string
+        isActive:
+          type: boolean
     CalculationResponse:
       type: object
       properties:
-        result:
-          type: number
-        operation:
+        id:
           type: string
-        operand1:
-          type: number
-        operand2:
-          type: number
+        name:
+          type: string
+        description:
+          type: string
+        formula:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     ErrorResponse:
       type: object
       properties:
@@ -76,4 +203,4 @@ components:
           type: string
         statusCode:
           type: integer
-x-backend: react
+x-backend: python

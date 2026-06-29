@@ -7,8 +7,9 @@ from openai import (
     APIConnectionError,
     APIStatusError,
 )
-from app.artifact_agent.app.src.llm.loader import llm
+from app.Infrastrature.llm.loader import llm
 from app.artifact_agent.app.src.prompt.prompt import build_prompt, PROMPT_TEMPLATE
+from app.utils.wrapper import log_agent
 
 # OUTPUT_FILE = Path(
 #     "yml/openapi.yml"
@@ -314,8 +315,17 @@ def apply_requested_backend(
 async def yml_code_gen(
     task: str,
     techstack: str,
-    instructions: str
+    instructions: str | None = None,
+    user_story_task_id: str = "",
 ):
+    await log_agent(
+        user_story_task_id=user_story_task_id,
+        stage="OpenAPI YAML Generation",
+        message="OpenAPI YAML Generation Started",
+        status="Running",
+        agent_name="Artifact YAML Agent",
+    )
+
     try:
 
         user_input = f"""
@@ -352,19 +362,48 @@ Tech Stack:
             parsed_response
         )
 
+        await log_agent(
+            user_story_task_id=user_story_task_id,
+            stage="OpenAPI YAML Generation",
+            message="OpenAPI YAML Generation Completed",
+            status="Completed",
+            agent_name="Artifact YAML Agent",
+        )
+
         return parsed_response
 
     except APIConnectionError as exc:
+        await log_agent(
+            user_story_task_id=user_story_task_id,
+            stage="OpenAPI YAML Generation",
+            message="Could not connect to LLM",
+            status="Failed",
+            agent_name="Artifact YAML Agent",
+        )
         raise RuntimeError(
             "Could not connect to LLM"
         ) from exc
 
     except APIStatusError as exc:
+        await log_agent(
+            user_story_task_id=user_story_task_id,
+            stage="OpenAPI YAML Generation",
+            message=f"API Error: {exc}",
+            status="Failed",
+            agent_name="Artifact YAML Agent",
+        )
         raise RuntimeError(
             f"API Error: {exc}"
         ) from exc
 
     except httpx.HTTPError as exc:
+        await log_agent(
+            user_story_task_id=user_story_task_id,
+            stage="OpenAPI YAML Generation",
+            message=f"Provider Error: {exc}",
+            status="Failed",
+            agent_name="Artifact YAML Agent",
+        )
         raise RuntimeError(
             f"Provider Error: {exc}"
         ) from exc

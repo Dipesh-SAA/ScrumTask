@@ -6,6 +6,7 @@ from openai import APIConnectionError, APIStatusError
 
 from app.Infrastrature.llm.loader import llm
 from app.test_case_agent.src.prompt import build_prompt
+from app.utils.wrapper import log_agent
 
 
 def parse_llm_json(text: str):
@@ -40,21 +41,69 @@ def parse_llm_json(text: str):
     }
 
 
-async def test_case(user_story: str, task: str):
-    try:
-        response = await llm.ainvoke(build_prompt(user_story, task))
+async def test_case(UserStoryTaskId: str, user_story: str, task: str):
+    await log_agent(
+        user_story_task_id=UserStoryTaskId,
+        stage="Test Case Generation",
+        message="Test Case Generation Started",
+        status="Running",
+        agent_name="Test Case Agent",
+    )
 
-        return parse_llm_json(response.content)
+    try:
+        response = await llm.ainvoke(build_prompt(UserStoryTaskId, user_story, task))
+        result = parse_llm_json(response.content)
+
+        await log_agent(
+            user_story_task_id=UserStoryTaskId,
+            stage="Test Case Generation",
+            message="Test Case Generation Completed",
+            status="Completed",
+            agent_name="Test Case Agent",
+        )
+
+        return result
 
     except APIConnectionError as exc:
-        raise RuntimeError("Could not connect to OpenAI API") from exc
+        await log_agent(
+            user_story_task_id=UserStoryTaskId,
+            stage="Test Case Generation",
+            message="Could not connect to LLM provider",
+            status="Failed",
+            agent_name="Test Case Agent",
+        )
+        raise RuntimeError("Could not connect to LLM provider") from exc
 
     except APIStatusError as exc:
+        await log_agent(
+            user_story_task_id=UserStoryTaskId,
+            stage="Test Case Generation",
+            message=f"LLM provider API error: {exc.status_code} {exc.message}",
+            status="Failed",
+            agent_name="Test Case Agent",
+        )
         raise RuntimeError(
-            f"OpenAI API error: {exc.status_code} {exc.message}"
+            f"LLM provider API error: {exc.status_code} {exc.message}"
         ) from exc
 
     except httpx.HTTPError as exc:
+        await log_agent(
+            user_story_task_id=UserStoryTaskId,
+            stage="Test Case Generation",
+            message=f"Could not connect to LLM provider: {exc}",
+            status="Failed",
+            agent_name="Test Case Agent",
+        )
         raise RuntimeError(
             f"Could not connect to LLM provider: {exc}"
         ) from exc
+
+    except Exception as exc:
+        await log_agent(
+            user_story_task_id=UserStoryTaskId,
+            stage="Test Case Generation",
+            message=str(exc),
+            status="Failed",
+            agent_name="Test Case Agent",
+        )
+        raise

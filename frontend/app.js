@@ -1,4 +1,5 @@
 const questionInput = document.querySelector('#question');
+const userStoryIdInput = document.querySelector('#userStoryId');
 const generateBtn = document.querySelector('#generateBtn');
 const refreshBtn = document.querySelector('#refreshBtn');
 const statusEl = document.querySelector('#status');
@@ -117,6 +118,13 @@ async function loadMarkdown() {
 
 async function generateUserStory() {
   const question = questionInput.value.trim();
+  const userStoryId = userStoryIdInput.value.trim();
+
+  if (!userStoryId) {
+    setStatus('Please enter a user story ID first.', 'error');
+    userStoryIdInput.focus();
+    return;
+  }
 
   if (!question) {
     setStatus('Please enter a requirement first.', 'error');
@@ -132,7 +140,10 @@ async function generateUserStory() {
     const response = await fetch('/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({
+        user_input: question,
+        UserStoryId: userStoryId,
+      }),
     });
     const data = await response.json();
 

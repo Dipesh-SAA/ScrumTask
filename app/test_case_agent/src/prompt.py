@@ -16,6 +16,9 @@ USER PROMPT:
 SPECIFICATION:
 {specification}
 
+UserStoryTaskId:
+{UserStoryTaskId}
+
 user_story:
 {user_story}
 
@@ -37,11 +40,12 @@ def load_document(name: str) -> str:
     return (DOCUMENT_DIR / name).read_text(encoding="utf-8")
 
 
-def build_prompt(user_story: str,task: str) -> str:
+def build_prompt(UserStoryTaskId: str, user_story: str, task: str) -> str:
     return PROMPT_TEMPLATE.format(
         constitution=load_document("constitution.md"),
         specification=load_document("specification.md"),
         user_prompt=load_document("user_prompt.md"),
+        UserStoryTaskId=UserStoryTaskId,
         user_story=user_story,
         task=task
     )

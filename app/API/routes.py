@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from datetime import datetime, timezone
 
 from app.graph.workflow import create_graph
-from app.graph.nodes.node import improve_user_story_llm
+from app.graph.nodes.node import improve_sub_task_llm
 from app.utils.logger import AgentLogger
 
 logger=AgentLogger()
@@ -540,6 +540,7 @@ def safe_logger(**kwargs):
 #         }
 class ChatRequest(BaseModel):
     user_input: str
+    UserStoryId: str = ""
 
 
 @router.post("/ask")
@@ -566,6 +567,7 @@ async def ask_question(data: ChatRequest):
 
         initial_state = {
             "user_input": data.user_input,
+            "user_story_id": data.UserStoryId,
             "retrieved_context": "",
             "constitution": "",
             "specification": "",
@@ -689,48 +691,55 @@ async def ask_question(data: ChatRequest):
 
 
 
-class ImproveUserStoryRequestBody(BaseModel):
+class ImproveSubTaskRequestBody(BaseModel):
+    user_story_task_id: str
+    subtask_id: str
     user_story: str
-    instruction: str
+    subtask: str
 
 
-@router.post("/improve_user_story")
-async def improve_user_story_api(request: ImproveUserStoryRequestBody):
+@router.post("/improve_sub_task")
+
+async def improve_sub_task_api(request: ImproveSubTaskRequestBody):
     start_time = time.time()
     correlation_id = str(uuid4())
 
     try:
         safe_logger(
-            agent_name="ImproveUserStoryAgent",
-            message="Improve user story request received",
-            event_type="ImproveUserStoryStarted",
-            source_module="ImproveUserStory.api.routes",
+            agent_name="ImproveSubTaskAgent",
+            message="Improve subtask request received",
+            event_type="ImproveSubTaskStarted",
+            source_module="ImproveSubTask.api.routes",
             is_success=True,
             correlation_id=correlation_id,
             payload={
-                "endpoint": "/improve_user_story",
+                "endpoint": "/improve_sub_task",
+                "user_story_task_id": request.user_story_task_id,
+                "subtask_id": request.subtask_id,
                 "user_story_length": len(request.user_story or ""),
-                "instruction_length": len(request.instruction or ""),
+                "subtask_length": len(request.subtask or ""),
             },
         )
 
-        response = await improve_user_story_llm(
+        response = await improve_sub_task_llm(
+            user_story_task_id=request.user_story_task_id,
+            subtask_id=request.subtask_id,
             user_story=request.user_story,
-            instruction=request.instruction,
+            subtask=request.subtask,
         )
 
         duration_ms = int((time.time() - start_time) * 1000)
 
         safe_logger(
-            agent_name="ImproveUserStoryAgent",
-            message="User story improvement completed successfully",
-            event_type="ImproveUserStoryCompleted",
-            source_module="ImproveUserStory.api.routes",
+            agent_name="ImproveSubTaskAgent",
+            message="Subtask improvement completed successfully",
+            event_type="ImproveSubTaskCompleted",
+            source_module="ImproveSubTask.api.routes",
             is_success=True,
             duration_ms=duration_ms,
             correlation_id=correlation_id,
             payload={
-                "endpoint": "/improve_user_story",
+                "endpoint": "/improve_sub_task",
                 "response_keys": list(response.keys()) if isinstance(response, dict) else [],
             },
         )
@@ -741,15 +750,15 @@ async def improve_user_story_api(request: ImproveUserStoryRequestBody):
         duration_ms = int((time.time() - start_time) * 1000)
         
         safe_logger(
-            agent_name="ImproveUserStoryAgent",
-            message=f"User story improvement failed: {str(exc)}",
-            event_type="ImproveUserStoryError",
-            source_module="ImproveUserStory.api.routes",
+            agent_name="ImproveSubTaskAgent",
+            message=f"Subtask improvement failed: {str(exc)}",
+            event_type="ImproveSubTaskError",
+            source_module="ImproveSubTask.api.routes",
             is_success=False,
             duration_ms=duration_ms,
             correlation_id=correlation_id,
             payload={
-                "endpoint": "/improve_user_story",
+                "endpoint": "/improve_sub_task",
                 "error": str(exc),
                 "stack_trace": traceback.format_exc(),
             },
@@ -757,5 +766,5 @@ async def improve_user_story_api(request: ImproveUserStoryRequestBody):
 
         raise HTTPException(
             status_code=500,
-            detail="An error occurred while improving the user story."
+            detail="An error occurred while improving the subtask."
         ) from exc
