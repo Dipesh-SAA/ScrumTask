@@ -1,10 +1,11 @@
 from pathlib import Path
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
-
+import json
+import re
 from app.Infrastrature.llm.loader import llm
 from app.Prompts.get_prompt_template_constitution import CONSTITUTION_GENERATOR_PROMPT
-from app.Prompts.get_prompt_template_test_case import TEST_CASE_GENERATOR_PROMPT
+from app.Prompts.get_improve_sub_task_prompt import IMPROVE_SUB_TASK_PROMPT
 from app.Prompts.get_prompt_template_specification import SPECIFICATION_GENERATOR_PROMPT
 from app.Prompts.get_prompt_template_task import TASK_GENERATOR_PROMPT
 from app.Schema.State import InputState
@@ -12,7 +13,7 @@ from app.Infrastrature.embeddings.embedding_model import (generate_embedding, ge
 from app.Prompts.get_prompt_template_user_story import (
     USER_STORY_GENERATOR_PROMPT
 )
-
+from app.utils.wrapper import log_agent
 BASE_DIR = Path(__file__).resolve().parents[3]
 # CONSTITUTION_PATH = BASE_DIR / "AI  Agent Global Consitution (1).docx"
 OUTPUT_DIR = BASE_DIR / "generated_md"
@@ -21,6 +22,25 @@ OUTPUT_DIR = BASE_DIR / "generated_md"
 def save_markdown(filename: str, content: str) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.joinpath(filename).write_text(content.strip(), encoding="utf-8")
+
+
+def parse_llm_json_response(text: str):
+    text = str(text).strip()
+    text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*```$", "", text)
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start != -1 and end != -1 and end > start:
+        return json.loads(text[start:end + 1])
+
+    raise ValueError("LLM response was not valid JSON")
 
 
 def read_context_file(path: Path) -> str:
@@ -137,6 +157,8 @@ async def chat_user_story_llm(
             {
                 "user_input": state["user_input"],
 
+                "user_story_id": state.get("user_story_id", ""),
+
                 "constitution": state["constitution"],
 
                 "specification": state["specification"],
@@ -175,24 +197,77 @@ async def chat_task_llm(state: InputState):
     return {"task": response.content}
 
 
-#test case generation is the final step, it will take the constitution, user story and task to generate test cases. It will follow strict traceability rules to ensure that every test case is directly traceable to a User Story or Acceptance Criterion. It will not invent any values unless explicitly stated in the User Story. The generated test cases will be saved in a markdown file for further use.
-async def chat_test_case_llm(user_story: str, task: str):
-    formatted_messages = TEST_CASE_GENERATOR_PROMPT.invoke(
-        {
-            "user_story": user_story,
-            "task": task,
-        }
+#improve user story llm.
+
+
+# async def improve_user_story_llm(user_story: str, instruction: str):
+#     formatted_messages = IMPROVE_USER_STORY_PROMPT.invoke(
+#         {
+#             "user_story": user_story,
+#             "instruction": instruction,
+#         }
+#     )
+
+#     response = await llm.ainvoke(formatted_messages)
+
+#     save_markdown("improve_user_story.md", response.content)
+
+#     return {
+#         "improve_user_story": parse_llm_json_response(response.content)
+#     }
+
+async def improve_sub_task_llm(
+    user_story_task_id: str,
+    subtask_id: str,
+    user_story: str,
+    subtask: str,
+):
+    await log_agent(
+        user_story_task_id=user_story_task_id,
+        stage="Improve Subtask",
+        message="Improve Subtask Started",
+        status="Running",
+        agent_name="Improve Subtask Agent",
     )
 
-    response = await llm.ainvoke(formatted_messages)
+    try:
+        # Fixed: Passing 'subtask' (or renaming to match your prompt template variables)
+        formatted_messages = IMPROVE_SUB_TASK_PROMPT.invoke(
+            {
+                "user_story": user_story,
+                "subtask_id": subtask_id,
+                "subtask": subtask,
+            }
+        )
 
-    save_markdown("test_case.md", response.content)
+        response = await llm.ainvoke(formatted_messages)
 
-    return {
-        "test_case": response.content
-    }
+        # Consistent naming for saved artifacts
+  
 
+        result = parse_llm_json_response(response.content)
 
+        await log_agent(
+            user_story_task_id=user_story_task_id,
+            stage="Improve Subtask",
+            message="Improve Subtask Completed",
+            status="Completed",
+            agent_name="Improve Subtask Agent",
+        )
+
+        return {
+            "improve_subtask": result
+        }
+
+    except Exception as e:
+        await log_agent(
+            user_story_task_id=user_story_task_id,
+            stage="Improve Subtask",
+            message=str(e),
+            status="Failed",
+            agent_name="Improve Subtask Agent",
+        )
+        raise
 
 
 # import asyncio

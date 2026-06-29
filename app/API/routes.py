@@ -9,11 +9,17 @@ import threading
 import time
 import traceback
 
+import time
+import traceback
+from uuid import uuid4
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from datetime import datetime, timezone
 
 from app.graph.workflow import create_graph
-from app.graph.nodes.node import chat_test_case_llm
+from app.graph.nodes.node import improve_sub_task_llm
 from app.utils.logger import AgentLogger
+
 logger=AgentLogger()
 router = APIRouter()
 graph_app = create_graph()
@@ -534,6 +540,7 @@ def safe_logger(**kwargs):
 #         }
 class ChatRequest(BaseModel):
     user_input: str
+    UserStoryId: str = ""
 
 
 @router.post("/ask")
@@ -560,6 +567,7 @@ async def ask_question(data: ChatRequest):
 
         initial_state = {
             "user_input": data.user_input,
+            "user_story_id": data.UserStoryId,
             "retrieved_context": "",
             "constitution": "",
             "specification": "",
@@ -677,127 +685,86 @@ async def ask_question(data: ChatRequest):
 # #             "test_case": result.get("test_case", ""),
 # #         }
 
-class TestCaseRequest(BaseModel):
+
+
+
+
+
+
+class ImproveSubTaskRequestBody(BaseModel):
+    user_story_task_id: str
+    subtask_id: str
     user_story: str
-    task: str
+    subtask: str
 
 
-# @router.post("/test")
-# async def generate_test_case(request: TestCaseRequest):
+@router.post("/improve_sub_task")
 
-#     start_time = time.time()
-#     correlation_id = str(uuid4())
+async def improve_sub_task_api(request: ImproveSubTaskRequestBody):
+    start_time = time.time()
+    correlation_id = str(uuid4())
 
-#     try:
+    try:
+        safe_logger(
+            agent_name="ImproveSubTaskAgent",
+            message="Improve subtask request received",
+            event_type="ImproveSubTaskStarted",
+            source_module="ImproveSubTask.api.routes",
+            is_success=True,
+            correlation_id=correlation_id,
+            payload={
+                "endpoint": "/improve_sub_task",
+                "user_story_task_id": request.user_story_task_id,
+                "subtask_id": request.subtask_id,
+                "user_story_length": len(request.user_story or ""),
+                "subtask_length": len(request.subtask or ""),
+            },
+        )
 
-#         safe_logger(
-#             agent_name="TestCaseAgent",
-#             message="Test case generation request received",
-#             event_type="TestCaseGenerationStarted",
-#             source_module="API.Routes",
-#             is_success=True,
-#             correlation_id=correlation_id,
-#             payload={
-#                 "endpoint": "/test",
-#             },
-#         )
+        response = await improve_sub_task_llm(
+            user_story_task_id=request.user_story_task_id,
+            subtask_id=request.subtask_id,
+            user_story=request.user_story,
+            subtask=request.subtask,
+        )
 
-#         result = await chat_test_case_llm(
-#             user_story=request.user_story,
-#             task=request.task,
-#         )
+        duration_ms = int((time.time() - start_time) * 1000)
 
-#         if result is None:
-#             raise Exception("LLM returned None")
+        safe_logger(
+            agent_name="ImproveSubTaskAgent",
+            message="Subtask improvement completed successfully",
+            event_type="ImproveSubTaskCompleted",
+            source_module="ImproveSubTask.api.routes",
+            is_success=True,
+            duration_ms=duration_ms,
+            correlation_id=correlation_id,
+            payload={
+                "endpoint": "/improve_sub_task",
+                "response_keys": list(response.keys()) if isinstance(response, dict) else [],
+            },
+        )
 
-#         if not isinstance(result, dict):
-#             raise Exception(
-#                 f"Invalid response type: {type(result)}"
-#             )
+        return response
 
-#         test_case_text = result.get("test_case")
+    except Exception as exc:
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        safe_logger(
+            agent_name="ImproveSubTaskAgent",
+            message=f"Subtask improvement failed: {str(exc)}",
+            event_type="ImproveSubTaskError",
+            source_module="ImproveSubTask.api.routes",
+            is_success=False,
+            duration_ms=duration_ms,
+            correlation_id=correlation_id,
+            payload={
+                "endpoint": "/improve_sub_task",
+                "error": str(exc),
+                "stack_trace": traceback.format_exc(),
+            },
+        )
 
-#         if not test_case_text:
-#             raise Exception(
-#                 "No test_case found in response"
-#             )
-
-#         try:
-#             parsed_test_case = json.loads(
-#                 test_case_text
-#             )
-
-#         except json.JSONDecodeError:
-
-#             duration_ms = int(
-#                 (time.time() - start_time) * 1000
-#             )
-
-#             safe_logger(
-#                 agent_name="TestCaseAgent",
-#                 message="Generated test case is not valid JSON",
-#                 event_type="JsonParsingError",
-#                 source_module="API.Routes",
-#                 is_success=False,
-#                 duration_ms=duration_ms,
-#                 correlation_id=correlation_id,
-#                 payload={
-#                     "endpoint": "/test",
-#                     "response_preview": test_case_text[:1000],
-#                 },
-#             )
-
-#             return {
-#                 "success": False,
-#                 "error": "Generated test case response is not valid JSON.",
-#                 "test_case": test_case_text,
-#             }
-
-#         duration_ms = int(
-#             (time.time() - start_time) * 1000
-#         )
-
-#         safe_logger(
-#             agent_name="TestCaseAgent",
-#             message="Test case generated successfully",
-#             event_type="TestCaseGenerationCompleted",
-#             source_module="API.Routes",
-#             is_success=True,
-#             duration_ms=duration_ms,
-#             correlation_id=correlation_id,
-#             payload={
-#                 "endpoint": "/test",
-#                 "response_size": len(test_case_text),
-#             },
-#         )
-
-#         return {
-#             "success": True,
-#             "test_case": parsed_test_case,
-#         }
-
-#     except Exception as e:
-
-#         duration_ms = int(
-#             (time.time() - start_time) * 1000
-#         )
-
-#         safe_logger(
-#             agent_name="TestCaseAgent",
-#             message=f"Test case generation failed: {str(e)}",
-#             event_type="TestCaseGenerationError",
-#             source_module="API.Routes",
-#             is_success=False,
-#             duration_ms=duration_ms,
-#             correlation_id=correlation_id,
-#             payload={
-#                 "endpoint": "/test",
-#                 "error": str(e),
-#                 "stack_trace": traceback.format_exc(),
-#             },
-#         )
-
-#         return {
-#             "success": False,
-#             "error": str(e)
-#         }
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while improving the subtask."
+        ) from exc

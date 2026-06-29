@@ -1,44 +1,45 @@
 openapi: 3.0.3
 info:
-  title: Create Ingestion Settings API
+  title: Calculation API
   version: 1.0.0
+  description: API for calculation operations
 servers:
 - url: http://localhost:8000
+  description: Local development server
 paths:
-  /ingestion-settings:
-    post:
-      summary: Create Ingestion Setting
-      operationId: createIngestionSetting
+  /calculations:
+    get:
       tags:
-      - IngestionSettings
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/IngestionSettingCreateRequest'
+      - calculation
+      summary: List all calculations
+      operationId: listCalculations
       responses:
-        '201':
-          description: Ingestion Setting created successfully
+        '200':
+          description: Calculations retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IngestionSettingResponse'
-        '400':
-          description: Bad Request
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalculationResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
         '500':
-          description: Internal Server Error
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /calculations/{id}:
     put:
-      summary: Update Ingestion Setting
-      operationId: updateIngestionSetting
       tags:
-      - IngestionSettings
+      - calculation
+      summary: Update a calculation
+      operationId: updateCalculation
       parameters:
       - name: id
         in: path
@@ -50,31 +51,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/IngestionSettingUpdateRequest'
+              $ref: '#/components/schemas/CalculationUpdateRequest'
       responses:
         '200':
-          description: Ingestion Setting updated successfully
+          description: Calculation updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IngestionSettingResponse'
+                $ref: '#/components/schemas/CalculationResponse'
         '400':
-          description: Bad Request
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Ingestion Setting not found
-        '401':
-          description: Unauthorized
+          description: Calculation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: Internal Server Error
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
-      summary: Delete Ingestion Setting
-      operationId: deleteIngestionSetting
       tags:
-      - IngestionSettings
+      - calculation
+      summary: Delete a calculation
+      operationId: deleteCalculation
       parameters:
       - name: id
         in: path
@@ -83,20 +96,111 @@ paths:
           type: string
       responses:
         '204':
-          description: Ingestion Setting deleted successfully
+          description: Calculation deleted successfully
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Ingestion Setting not found
+          description: Calculation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: Internal Server Error
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - calculation
+      summary: Get a calculation by ID
+      operationId: getCalculation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Calculation retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculationResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Calculation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-security:
-- bearerAuth: []
+  schemas:
+    CalculationCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        formula:
+          type: string
+        isActive:
+          type: boolean
+    CalculationUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        formula:
+          type: string
+        isActive:
+          type: boolean
+    CalculationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        formula:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer
 x-backend: python
-x-database: mongodb

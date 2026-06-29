@@ -22,7 +22,9 @@ Do not return markdown.
 Do not return code fences.
 Do not return explanations.
 Do not return any text before or after the YAML.
-Do not forget the x-backend for YAML it will be python or .net or .netcore.
+Do not forget x-backend in the YAML.
+Set x-backend exactly from the requested Tech Stack when it is supplied.
+Supported x-backend values include python, fastapi, .net, nodejs, java, react, angular, vue, nextjs, flask, sql, postgresql, mysql, and oracle.
 """
 
 def load_document(name: str) -> str:

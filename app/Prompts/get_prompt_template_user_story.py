@@ -17,6 +17,9 @@ INPUTS:
 - User Request:
 {user_input}
 
+- Requested User Story ID:
+{user_story_id}
+
 - Constitution:
 {constitution}
 
@@ -67,6 +70,8 @@ Acceptance Criteria:
 STRICT RULES:
 - Generate only software/application/product-related user stories.
 - Generate exactly one user story for a valid request.
+- If a Requested User Story ID is provided, use that exact value for User Story ID.
+- If a Requested User Story ID is empty, generate a clear unique User Story ID.
 - Do NOT generate multiple user stories, even if the input contains multiple features or requirements.
 - If the input contains multiple features, choose the primary feature and represent it as one complete user story.
 - The user story must include User Story ID, Title, Description, and Acceptance Criteria only.

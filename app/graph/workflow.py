@@ -30,7 +30,7 @@
 #     return graph.compile(checkpointer=memory)
    
 
-
+from app.utils.wrapper import with_logging
 from app.Schema.State import InputState
 
 from langgraph.graph import StateGraph, START, END
@@ -42,7 +42,6 @@ from app.graph.nodes.node import (
     # chat_planning_llm,
     chat_task_llm,
     chat_user_story_llm,
-    chat_test_case_llm
 )
 
 
@@ -68,12 +67,13 @@ def create_graph():
 
     graph.add_node(
         "task",
-        chat_task_llm
+        with_logging("Task", chat_task_llm)
     )
 
     graph.add_node(
         "user_story",
-        chat_user_story_llm
+        # chat_user_story_llm,
+        with_logging("User Story", chat_user_story_llm)
     )
     # graph.add_node(
     #     "test_case",

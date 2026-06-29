@@ -5,6 +5,7 @@ from langchain_core.messages import BaseMessage
 
 class InputState(TypedDict):
     user_input: str
+    user_story_id: str
 
     messages: Annotated[
         Sequence[BaseMessage],
