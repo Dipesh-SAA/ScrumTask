@@ -32,6 +32,9 @@ SUBTASK ID:
 
 SUBTASK:
 {subtask}
+
+INSTRUCTION:
+{instruction}
 """).partial(
     system_prompt=SYSTEM_PROMPT,
     constitution=CONSTITUTION,

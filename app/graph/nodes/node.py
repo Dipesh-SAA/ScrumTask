@@ -221,6 +221,7 @@ async def improve_sub_task_llm(
     subtask_id: str,
     user_story: str,
     subtask: str,
+    instruction: str = "",
 ):
     await log_agent(
         user_story_task_id=user_story_task_id,
@@ -237,6 +238,7 @@ async def improve_sub_task_llm(
                 "user_story": user_story,
                 "subtask_id": subtask_id,
                 "subtask": subtask,
+                "instruction": instruction,
             }
         )
 
