@@ -536,11 +536,14 @@ def get_backend(yaml_data: dict) -> str:
         )
 
     backend = str(backend).lower().strip()
+    backend = re.sub(r"[_\-]+", " ", backend)
     backend = re.sub(r"\s+", " ", backend)
 
     backend_mapping = {
         "python": "python",
+        "python fastapi": "python",
         "fastapi": "python",
+        "python flask": "flask",
 
         ".net": ".net",
         ".net core": ".net",
@@ -552,8 +555,23 @@ def get_backend(yaml_data: dict) -> str:
         "csharp": ".net",
         "asp.net": ".net",
         "asp.net core": ".net",
+        "asp.net core api": ".net",
+        "asp.net core web api": ".net",
+        "asp.net web api": ".net",
         "asp.netcore": ".net",
+        "asp.netcore webapi": ".net",
+        "asp net core": ".net",
+        "asp net core api": ".net",
+        "asp net core web api": ".net",
+        "aspnet": ".net",
+        "aspnet web api": ".net",
         "aspnetcore": ".net",
+        "aspnetcore api": ".net",
+        "aspnetcore webapi": ".net",
+        "c# api": ".net",
+        "c# web api": ".net",
+        "csharp api": ".net",
+        "csharp web api": ".net",
 
         "java": "java",
         "spring": "java",
@@ -562,11 +580,16 @@ def get_backend(yaml_data: dict) -> str:
         "node": "node",
         "nodejs": "node",
         "express": "node",
+        "node js": "nodejs",
+        "node.js express": "nodejs",
+        "node js express": "nodejs",
+        "nodejs express": "nodejs",
 
         "c": "c",
 
         "sql": "sql",
         "sqlserver": "sql",
+        "sql server": "sql",
         "mssql": "sql",
         "tsql": "sql",
         "t-sql": "sql",

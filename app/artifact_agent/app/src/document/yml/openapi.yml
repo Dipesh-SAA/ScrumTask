@@ -1,64 +1,33 @@
 openapi: 3.0.3
 info:
-  title: Calculation API
+  title: Secure API Endpoint for Initiating Password Reset Requests
   version: 1.0.0
-  description: API for calculation operations
+  description: API for password reset request initiation
 servers:
-- url: http://localhost:8000
-  description: Local development server
+- url: https://api.example.com/v1
+  description: Production server
 paths:
-  /calculations:
-    get:
+  /password-reset-requests:
+    post:
       tags:
-      - calculation
-      summary: List all calculations
-      operationId: listCalculations
-      responses:
-        '200':
-          description: Calculations retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CalculationResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /calculations/{id}:
-    put:
-      tags:
-      - calculation
-      summary: Update a calculation
-      operationId: updateCalculation
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+      - PasswordResetRequest
+      summary: Initiate password reset request
+      operationId: createPasswordResetRequest
+      security:
+      - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CalculationUpdateRequest'
+              $ref: '#/components/schemas/PasswordResetRequestCreateRequest'
       responses:
-        '200':
-          description: Calculation updated successfully
+        '201':
+          description: Password reset request created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CalculationResponse'
+                $ref: '#/components/schemas/PasswordResetRequestResponse'
         '400':
           description: Bad request
           content:
@@ -71,80 +40,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Calculation not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      tags:
-      - calculation
-      summary: Delete a calculation
-      operationId: deleteCalculation
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          description: Calculation deleted successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Calculation not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    get:
-      tags:
-      - calculation
-      summary: Get a calculation by ID
-      operationId: getCalculation
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Calculation retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CalculationResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Calculation not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -153,38 +48,25 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    CalculationCreateRequest:
+    PasswordResetRequestCreateRequest:
       type: object
       properties:
-        name:
+        email:
           type: string
-        description:
+          format: email
+        resetToken:
           type: string
-        formula:
-          type: string
-        isActive:
-          type: boolean
-    CalculationUpdateRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        formula:
-          type: string
-        isActive:
-          type: boolean
-    CalculationResponse:
+      required:
+      - email
+    PasswordResetRequestResponse:
       type: object
       properties:
         id:
           type: string
-        name:
+        email:
           type: string
-        description:
-          type: string
-        formula:
+          format: email
+        resetToken:
           type: string
         isActive:
           type: boolean
@@ -198,9 +80,20 @@ components:
       type: object
       properties:
         error:
-          type: string
-        message:
-          type: string
-        statusCode:
-          type: integer
-x-backend: python
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+x-backend: .net
+x-frontend: asp.net core web api
