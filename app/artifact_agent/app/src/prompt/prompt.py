@@ -23,8 +23,30 @@ Do not return code fences.
 Do not return explanations.
 Do not return any text before or after the YAML.
 Do not forget x-backend in the YAML.
-Set x-backend exactly from the requested Tech Stack when it is supplied.
-Supported x-backend values include python, fastapi, .net, nodejs, java, react, angular, vue, nextjs, flask, sql, postgresql, mysql, and oracle.
+Set x-backend to a canonical generator value from the requested Tech Stack.
+Backend Api values:
+- ASP.NET Core Web API -> .net
+- Node.js Express -> nodejs
+- Python FastAPI -> python
+- Python Flask -> flask
+Frontend values:
+- React -> react
+- Angular -> angular
+- Vue -> vue
+- Next.js -> nextjs
+DatabaseType values should be written to x-database, not x-backend:
+- MongoDB -> mongodb
+- SQL Server -> sqlserver
+- MySQL -> mysql
+- PostgreSQL -> postgresql
+UI Library values should be written to x-ui-library:
+- Tailwind CSS -> tailwindcss
+- Material UI -> material-ui
+- Bootstrap -> bootstrap
+- Custom -> custom
+AI/Agent Framework values should be written to x-ai-agent-framework:
+- LangGraph -> langgraph
+- LangChain -> langchain
 """
 
 def load_document(name: str) -> str:

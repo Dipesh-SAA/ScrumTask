@@ -2,16 +2,27 @@ from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
-client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
-db = client["ScrumAgentsActivity"]
+mongo_uri = os.getenv("MONGO_URI") or os.getenv("MONGODB_URI") or "mongodb://localhost:27017/"
+client = AsyncIOMotorClient(
+    mongo_uri,
+    serverSelectionTimeoutMS=int(os.getenv("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "2000")),
+)
+db = client[os.getenv("MONGO_DB_NAME") or "ScrumAgentsActivity"]
 
 collection = db["AgentsActivity"]
+
+
+async def _insert_log(document: dict):
+    try:
+        await collection.insert_one(document)
+    except Exception as exc:
+        print(f"[log_agent] MongoDB logging skipped: {exc}")
 
 def with_logging(stage, func):
     async def wrapper(state):
         user_story_id = state.get("user_story_id", state.get("UserStoryId", ""))
 
-        await collection.insert_one({
+        await _insert_log({
             "UserStoryTaskId": user_story_id,
             "Stage": stage,
             "AgentName": stage,
@@ -24,7 +35,7 @@ def with_logging(stage, func):
         try:
             result = await func(state)
 
-            await collection.insert_one({
+            await _insert_log({
                 "UserStoryTaskId": user_story_id,
                 "Stage": stage,
                 "AgentName": stage,
@@ -38,7 +49,7 @@ def with_logging(stage, func):
 
         except Exception as e:
 
-            await collection.insert_one({
+            await _insert_log({
                 "UserStoryTaskId": user_story_id,
                 "Stage": stage,
                 "AgentName": stage,
@@ -62,7 +73,7 @@ async def log_agent(
 ):
     now = datetime.utcnow()
 
-    await collection.insert_one(
+    await _insert_log(
         {
             "UserStoryTaskId": user_story_task_id,
             "Stage": stage,

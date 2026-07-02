@@ -248,15 +248,51 @@ def save_openapi_yaml(
         encoding="utf-8"
     )
 
-def normalize_backend(
-    techstack: str
-) -> str:
-    backend = str(techstack or "").lower().strip()
-    backend = re.sub(r"\s+", " ", backend)
+def _normalize_label(value: str | None) -> str:
+    label = str(value or "").lower().strip()
+    label = re.sub(r"[_\-]+", " ", label)
+    label = re.sub(r"\s+", " ", label)
+    return label
 
-    backend_mapping = {
+
+def _is_placeholder(value: str | None) -> bool:
+    label = _normalize_label(value)
+    return not label or label.startswith("select ")
+
+
+def _normalize_from_mapping(value: str | None, mapping: dict[str, str]) -> str:
+    label = _normalize_label(value)
+
+    if _is_placeholder(label):
+        return ""
+
+    if label in mapping:
+        return mapping[label]
+
+    for key in sorted(mapping, key=len, reverse=True):
+        if key in label:
+            return mapping[key]
+
+    return label
+
+
+def _extract_labeled_value(text: str | None, labels: tuple[str, ...]) -> str:
+    if not text:
+        return ""
+
+    label_pattern = "|".join(re.escape(label) for label in labels)
+    pattern = rf"(?im)^\s*(?:{label_pattern})\s*:\s*(.+?)\s*$"
+    match = re.search(pattern, str(text))
+
+    return match.group(1).strip() if match else ""
+
+
+BACKEND_MAPPING = {
         "python": "python",
+        "python fastapi": "python",
         "fastapi": "python",
+        "python flask": "flask",
+        "flask": "flask",
         ".net": ".net",
         ".net core": ".net",
         ".netcore": ".net",
@@ -267,14 +303,33 @@ def normalize_backend(
         "csharp": ".net",
         "asp.net": ".net",
         "asp.net core": ".net",
+        "asp.net core api": ".net",
+        "asp.net core web api": ".net",
+        "asp.net web api": ".net",
         "asp.netcore": ".net",
+        "asp.netcore webapi": ".net",
+        "asp net core": ".net",
+        "asp net core api": ".net",
+        "asp net core web api": ".net",
+        "aspnet": ".net",
+        "aspnet web api": ".net",
         "aspnetcore": ".net",
+        "aspnetcore api": ".net",
+        "aspnetcore webapi": ".net",
+        "c# api": ".net",
+        "c# web api": ".net",
+        "csharp api": ".net",
+        "csharp web api": ".net",
         "java": "java",
         "spring": "java",
         "spring boot": "java",
         "node": "nodejs",
         "nodejs": "nodejs",
         "node.js": "nodejs",
+        "node js": "nodejs",
+        "node.js express": "nodejs",
+        "node js express": "nodejs",
+        "nodejs express": "nodejs",
         "express": "nodejs",
         "expressjs": "nodejs",
         "react": "react",
@@ -289,25 +344,141 @@ def normalize_backend(
         "next": "nextjs",
         "nextjs": "nextjs",
         "next.js": "nextjs",
-        "flask": "flask",
-        "python flask": "flask",
         "sql": "sql",
         "sqlserver": "sql",
+        "sql server": "sql",
         "mssql": "sql",
         "postgres": "postgresql",
         "postgresql": "postgresql",
+        "postgre sql": "postgresql",
         "mysql": "mysql",
         "oracle": "oracle",
-    }
+}
 
-    return backend_mapping.get(backend, backend)
+FRONTEND_MAPPING = {
+    "react": "react",
+    "angular": "angular",
+    "vue": "vue",
+    "next": "nextjs",
+    "nextjs": "nextjs",
+    "next.js": "nextjs",
+}
+
+DATABASE_MAPPING = {
+    "mongodb": "mongodb",
+    "mongo db": "mongodb",
+    "mongo": "mongodb",
+    "sql server": "sqlserver",
+    "sqlserver": "sqlserver",
+    "mssql": "sqlserver",
+    "mysql": "mysql",
+    "postgresql": "postgresql",
+    "postgre sql": "postgresql",
+    "postgres": "postgresql",
+}
+
+UI_LIBRARY_MAPPING = {
+    "tailwind css": "tailwindcss",
+    "tailwind": "tailwindcss",
+    "material ui": "material-ui",
+    "mui": "material-ui",
+    "bootstrap": "bootstrap",
+    "custom": "custom",
+}
+
+AI_AGENT_FRAMEWORK_MAPPING = {
+    "langgraph": "langgraph",
+    "lang graph": "langgraph",
+    "langchain": "langchain",
+    "lang chain": "langchain",
+}
+
+
+def normalize_backend(techstack: str | None) -> str:
+    return _normalize_from_mapping(techstack, BACKEND_MAPPING)
+
+
+def normalize_frontend(frontend: str | None) -> str:
+    return _normalize_from_mapping(frontend, FRONTEND_MAPPING)
+
+
+def normalize_database(database: str | None) -> str:
+    return _normalize_from_mapping(database, DATABASE_MAPPING)
+
+
+def normalize_ui_library(ui_library: str | None) -> str:
+    return _normalize_from_mapping(ui_library, UI_LIBRARY_MAPPING)
+
+
+def normalize_ai_agent_framework(framework: str | None) -> str:
+    return _normalize_from_mapping(framework, AI_AGENT_FRAMEWORK_MAPPING)
+
+
+def normalize_data_platform(platform: str | None) -> str:
+    if _is_placeholder(platform):
+        return ""
+    return _normalize_label(platform)
 
 def apply_requested_backend(
     data,
     techstack: str
 ):
     if isinstance(data, dict) and techstack:
-        data["x-backend"] = normalize_backend(techstack)
+        backend_value = _extract_labeled_value(
+            techstack,
+            ("Backend Api", "Backend API", "Backend", "API Backend"),
+        )
+        frontend_value = _extract_labeled_value(techstack, ("Frontend",))
+        database_value = _extract_labeled_value(
+            techstack,
+            ("DatabaseType", "Database Type", "Database"),
+        )
+        ui_library_value = _extract_labeled_value(
+            techstack,
+            ("UI Library", "UILibrary"),
+        )
+        ai_agent_framework_value = _extract_labeled_value(
+            techstack,
+            ("AI/Agent Framework", "AI Agent Framework", "Agent Framework"),
+        )
+        data_platform_value = _extract_labeled_value(
+            techstack,
+            ("VIBE/Data Platform", "VIBE Data Platform", "Data Platform"),
+        )
+        has_labeled_technology = any(
+            (
+                backend_value,
+                frontend_value,
+                database_value,
+                ui_library_value,
+                ai_agent_framework_value,
+                data_platform_value,
+            )
+        )
+
+        backend = normalize_backend(backend_value)
+        if not backend and not has_labeled_technology:
+            backend = normalize_backend(techstack)
+
+        frontend = normalize_frontend(frontend_value) or normalize_frontend(techstack)
+        database = normalize_database(database_value)
+        ui_library = normalize_ui_library(ui_library_value)
+        ai_agent_framework = normalize_ai_agent_framework(ai_agent_framework_value)
+        data_platform = normalize_data_platform(data_platform_value)
+
+        if backend or frontend:
+            data["x-backend"] = backend or frontend
+
+        if frontend:
+            data["x-frontend"] = frontend
+        if database:
+            data["x-database"] = database
+        if ui_library:
+            data["x-ui-library"] = ui_library
+        if ai_agent_framework:
+            data["x-ai-agent-framework"] = ai_agent_framework
+        if data_platform:
+            data["x-data-platform"] = data_platform
 
     return data
 

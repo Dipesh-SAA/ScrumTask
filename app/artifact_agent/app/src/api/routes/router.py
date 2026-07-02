@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from app.artifact_agent.app.src.agents.yml_agent import yml_code_gen
 from app.artifact_agent.app.src.agents.openapi_gen import openapi_code_gen
 from app.utils.logger import AgentLogger
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import AliasChoices, BaseModel, Field, ConfigDict
 
 router = APIRouter(tags=["code_generator"])
 logger = AgentLogger()
@@ -27,9 +27,66 @@ class CodeGenRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     task: str
-    techstack: str
+    techstack: str = ""
     UserStoryTaskId: str = Field(alias="SubTaskId")
     instructions: str | None = Field(default=None, alias="Instructions")
+    frontend: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("frontend", "Frontend"),
+    )
+    backend_api: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("backendApi", "BackendApi", "Backend Api", "backend_api"),
+    )
+    ui_library: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("uiLibrary", "UILibrary", "UI Library", "ui_library"),
+    )
+    database_type: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("databaseType", "DatabaseType", "Database Type", "database_type"),
+    )
+    ai_agent_framework: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "aiAgentFramework",
+            "AIAgentFramework",
+            "AI/Agent Framework",
+            "AI Agent Framework",
+            "ai_agent_framework",
+        ),
+    )
+    data_platform: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "vibeDataPlatform",
+            "VIBEDataPlatform",
+            "VIBE/Data Platform",
+            "Data Platform",
+            "data_platform",
+        ),
+    )
+
+    def technology_stack(self) -> str:
+        parts = []
+
+        if self.techstack:
+            parts.append(self.techstack)
+
+        labeled_values = {
+            "Frontend": self.frontend,
+            "Backend Api": self.backend_api,
+            "UI Library": self.ui_library,
+            "DatabaseType": self.database_type,
+            "AI/Agent Framework": self.ai_agent_framework,
+            "VIBE/Data Platform": self.data_platform,
+        }
+
+        for label, value in labeled_values.items():
+            if value and not str(value).lower().strip().startswith("select "):
+                parts.append(f"{label}: {value}")
+
+        return "\n".join(parts)
 
 
 def safe_logger(**kwargs):
@@ -44,6 +101,7 @@ def safe_logger(**kwargs):
 async def generate_full_api(request: CodeGenRequest):
     start_time = time.time()
     correlation_id = str(uuid4())
+    techstack = request.technology_stack()
 
     try:
         safe_logger(
@@ -56,7 +114,7 @@ async def generate_full_api(request: CodeGenRequest):
             payload={
                 "endpoint": "/generate-full-api",
                 "task": request.task,
-                "techstack": request.techstack,
+                "techstack": techstack,
                 "UserStoryTaskId": request.UserStoryTaskId,
                 "has_instructions": bool(request.instructions),
             },
@@ -64,7 +122,7 @@ async def generate_full_api(request: CodeGenRequest):
 
         yml_response = await yml_code_gen(
             task=request.task,
-            techstack=request.techstack,
+            techstack=techstack,
             user_story_task_id=request.UserStoryTaskId,
             instructions=request.instructions
         )
@@ -142,7 +200,7 @@ async def generate_full_api(request: CodeGenRequest):
             payload={
                 "endpoint": "/generate-full-api",
                 "task": request.task,
-                "techstack": request.techstack,
+                "techstack": techstack,
                 "UserStoryTaskId": request.UserStoryTaskId,
                 "error": str(exc),
                 "stack_trace": traceback.format_exc(),
@@ -153,4 +211,3 @@ async def generate_full_api(request: CodeGenRequest):
             status_code=500,
             detail=str(exc)
         ) from exc
-
